@@ -1,6 +1,10 @@
 MEMINFO
 =======
 
+Compatibility
+-------------
+ - compiled and tested on PHP 5.4.4 (Debian)
+
 Compilation instructions
 ------------------------
 MemInfo can be compiled outside PHP itself.
