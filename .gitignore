@@ -39,3 +39,7 @@ missing
 mkinstalldirs
 modules
 run-tests.php
+include
+
+# Vim
+*.swp
