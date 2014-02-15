@@ -2,7 +2,7 @@ MEMINFO
 =======
 PHP Meminfo is a very simple PHP extension that gives you insight on the current content of the memory in PHP.
 
-It's main goal is to identifiy memory leaks, but can be useful as well to get information on the behaviour of your application by looking at what data it produces in memory.
+It's main goal is to understand memory leaks, but can be useful as well to get information on the behaviour of your application by looking at what data it produces in memory.
 
 The main source of inspiration for this tool is the Java jmap tool with the -histo option (see `man jmap`)
 
