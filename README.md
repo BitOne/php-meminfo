@@ -93,7 +93,9 @@ Some simple shell one-liners can help you aggregate data from the dumped objects
 
 Usage in production
 -------------------
-PHP Meminfo can be used in production, as it does not any impact on performances outside of the call to the `meminfo` functions.
+PHP Meminfo can be used in production, as it does not have any impact on performances outside of the call to the `meminfo` functions.
+
+Nevertheless, production environment is not where you debug ;)
 
 Other memory debugging tools for PHP
 -------------------------------------
