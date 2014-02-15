@@ -79,16 +79,17 @@ Note: It's a good idea to call the `gc_collect_cycles()` function before executi
 The `examples/` directory at the root of the repository contains more detailed examples.
 
     php examples/objects_list.php
+
 ### Analysis
 Some simple shell one-liners can help you aggregate data from the dumped objects list to get a better grasp at what's happening:
 
  - Ordered list of number of objects per class
 
-  cat objects_list.meminfo | grep - | cut -d "," -f 1 | sort | uniq -c | sort -n
+    cat objects_list.meminfo | grep - | cut -d "," -f 1 | sort | uniq -c | sort -n
 
  - Top 5 of the most present class by objects number
 
-  cat objects_list.meminfo | grep - | cut -d "," -f 1 | sort | uniq -c | sort -nr | head -n 5
+    cat objects_list.meminfo | grep - | cut -d "," -f 1 | sort | uniq -c | sort -nr | head -n 5
 
 Usage in production
 -------------------
