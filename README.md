@@ -22,15 +22,18 @@ apt-get install php5-dev
 
 Once you have this command, follow this steps:
 
-1. Go to the root of the MemInfo source files
-2. phpize
-3. ./configure --enable-meminfo
-4. make
-5. cp modules/meminfo.so /path/to/your/extensions/folder
-6. add the following line to your php.ini or to a custom file inside /etc/php5/conf.d/ for Debian based system.
+1. Go to the root of the MemInfo source files and compile the extension:
+
+  phpize
+  ./configure --enable-meminfo
+  make
+  cp modules/meminfo.so /path/to/your/extensions/folder
+
+2. add the following line to your php.ini or to a custom file inside /etc/php5/conf.d/ for Debian based system.
     `extension=meminfo.sp`
-7. restart your webserver
-8. check the PHP Info output and look for the MemInfo data. If you can find it, installation has been successful.
+3. restart your webserver
+4. check the PHP Info output and look for the MemInfo data. If you can find it, installation has been successful.
+
 To see the PHP Info output, just create a page calling the phpinfo(); function, a load it from your browser, or call php -i from command line.
 
 Usage
