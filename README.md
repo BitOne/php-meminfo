@@ -24,10 +24,10 @@ Once you have this command, follow this steps:
 
 1. Go to the root of the MemInfo source files and compile the extension:
 
-  phpize
-  ./configure --enable-meminfo
-  make
-  cp modules/meminfo.so /path/to/your/extensions/folder
+    phpize
+    ./configure --enable-meminfo
+    make
+    cp modules/meminfo.so /path/to/your/extensions/folder
 
 2. add the following line to your php.ini or to a custom file inside /etc/php5/conf.d/ for Debian based system.
     `extension=meminfo.sp`
