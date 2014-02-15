@@ -42,11 +42,12 @@ To see the PHP Info output, just create a page calling the phpinfo(); function, 
 
 Usage
 -----
-All meminfo function take a stream handle as a parameter. It allows you to specify a file (if needed with a variable name identified to your context), as well as uses standard output with the `php://stdout` stream.
+All meminfo functions take a stream handle as a parameter. It allows you to specify a file (if needed with a variable name identified to your context), as well as uses standard output with the `php://stdout` stream.
 
 ## Information on structs size
 Display size in byte of main data structs size in PHP. Will mainly differ between 32bits et 64bits environments.
-̀̀meminfo_structs_size(fopen('php://stdout','w')); ̀
+
+    meminfo_structs_size(fopen('php://stdout','w'));
 
 It can be useful to understand difference in memory usage between two platforms.
 
@@ -58,10 +59,11 @@ Example Output on 64bits environment:
       Variable (zval): 24 bytes.
       Variable value (zvalue_value): 16 bytes.
 
-##List currently active objects
-̀̀meminfo_objects_list(fopen('php://stdout','w')); ̀
+##List of currently active objects
+Provides a list of live objects with their class and their handle, as well as the total number of active objects and the total number of allocated object buckets.
 
-Will provides the list of objects with their class and their handle, as well as the total number of active objects and the total number of allocated object buckets.
+    meminfo_objects_list(fopen('php://stdout','w'));
+
 
 For example:
 
