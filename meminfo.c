@@ -18,6 +18,7 @@ const zend_function_entry meminfo_functions[] = {
     PHP_FE(meminfo_structs_size, NULL)
     PHP_FE(meminfo_objects_list, NULL)
     PHP_FE(meminfo_gc_roots_list, NULL)
+    PHP_FE(meminfo_symbol_table, NULL)
     {NULL, NULL, NULL}
 };
 
@@ -41,6 +42,74 @@ zend_module_entry meminfo_module_entry = {
 #ifdef COMPILE_DL_MEMINFO
 ZEND_GET_MODULE(meminfo)
 #endif
+
+//TODO: use gettype directly ? Possible ?
+char* get_type_label(zval* z) {
+    switch (Z_TYPE_P(z)) {
+        case IS_NULL:
+            return "NULL";
+            break;
+
+        case IS_BOOL:
+            return "boolean";
+            break;
+
+        case IS_LONG:
+            return "integer";
+            break;
+
+        case IS_DOUBLE:
+            return "double";
+            break;
+    
+        case IS_STRING:
+            return "string";
+            break;
+    
+        case IS_ARRAY:
+            return "array";
+            break;
+
+        case IS_OBJECT:
+            return "object";
+            break;
+
+        case IS_RESOURCE:
+            return "resource";
+            break;
+
+        default:
+            return "Unknown type";
+    }
+}
+
+/**
+ * Return the class associated to the provided object handle
+ *
+ * @param zend_uint object handle
+ *
+ * @return char * class name
+ */
+const char *get_classname(zend_uint handle)
+{
+    zend_objects_store *objects = &EG(objects_store);
+    zend_object *object;
+    zend_class_entry *class_entry;
+    const char* class_name;
+
+    class_name = "";
+
+    if (objects->object_buckets[handle].valid) {
+        struct _store_object *obj = &objects->object_buckets[handle].bucket.obj;
+        object =  (zend_object * ) obj->object;
+
+        class_entry = object->ce;
+        class_name = class_entry->name;
+    }
+
+    return class_name;
+}
+
 
 PHP_FUNCTION(meminfo_structs_size)
 {
@@ -83,11 +152,7 @@ PHP_FUNCTION(meminfo_objects_list)
 
     for (i = 1; i < objects->top ; i++) {
         if (objects->object_buckets[i].valid) {
-            struct _store_object *obj = &objects->object_buckets[i].bucket.obj;
-            object =  (zend_object * ) obj->object;
-
-            class_entry = object->ce;
-            stream_printf(stream, "  - Class %s, handle %d\n", class_entry->name, i);
+            stream_printf(stream, "  - Class %s, handle %d\n", get_classname(i), i);
 
             current_objects++;
         }
@@ -101,6 +166,7 @@ PHP_FUNCTION(meminfo_gc_roots_list)
 {
     zval *zval_stream;
     php_stream *stream;
+    zval* pz;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zval_stream) == FAILURE) {
         return;
@@ -110,19 +176,43 @@ PHP_FUNCTION(meminfo_gc_roots_list)
     stream_printf(stream, "GC roots list:\n");
 
     gc_root_buffer *current = GC_G(roots).next;
-    while (current != &GC_G(roots)) {
-        if (current->handle) {
-            stream_printf(stream, "  Handle %d found on GC root\n", current->handle);
-        } else {
-            zval* z =current->u.pz;
 
-            stream_printf(stream, "  Not object GC root\n");
-            stream_printf(stream, "  GC root of type %c\n",Z_TYPE_P(current->u.pz));
+    while (current != &GC_G(roots)) {
+        pz = current->u.pz;
+        stream_printf( stream, "  zval pointer: %p ", (void *) pz); 
+        if (current->handle) {
+            stream_printf(
+                stream,
+                "  Class %s, handle %d\n",
+                get_classname(current->handle),
+                current->handle);
+        } else {
+            stream_printf(stream, "  Type: %s", get_type_label(pz));
+            stream_printf(stream, ", Ref count GC %d\n", pz->refcount__gc);
+
         }
-        stream_printf(stream, "    Ref count GC %d\n",current->u.pz->refcount__gc);
         current = current->next;
 
     }
+}
+
+PHP_FUNCTION(meminfo_symbol_table)
+{
+    zval *zval_stream;
+    php_stream *stream;
+    HashTable main_symbol_table;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zval_stream) == FAILURE) {
+        return;
+    }
+
+    php_stream_from_zval(stream, &zval_stream);
+
+    main_symbol_table = EG(symbol_table);
+
+    stream_printf(stream, "Nb elements in Symbol Table: %d\n",main_symbol_table.nNumOfElements);
+
+    
 }
 
 
