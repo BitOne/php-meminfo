@@ -1,11 +1,11 @@
 #ifndef PHP_MEMINFO_H
 #define PHP_MEMINFO_H 1
 
-#define MEMINFO_NAME "MemInfo"
+#define MEMINFO_NAME "PHP Meminfo"
 #define MEMINFO_VERSION "0.1-dev"
 #define MEMINFO_AUTHOR "Benoit Jacquemont"
-#define XDEBUG_COPYRIGHT  "Copyright (c) 2010-2014 by Benoit Jacquemont"
-#define XDEBUG_COPYRIGHT_SHORT "Copyright (c) 2010-2014"
+#define MEMINFO_COPYRIGHT  "Copyright (c) 2010-2014 by Benoit Jacquemont"
+#define MEMINFO_COPYRIGHT_SHORT "Copyright (c) 2011-2014"
 
 PHP_FUNCTION(meminfo_structs_size);
 PHP_FUNCTION(meminfo_objects_list);
