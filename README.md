@@ -64,7 +64,6 @@ Provides a list of live objects with their class and their handle, as well as th
 
     meminfo_objects_list(fopen('php://stdout','w'));
 
-
 For example:
 
     Objects list:
@@ -78,6 +77,8 @@ Note: It's a good idea to call the `gc_collect_cycles()` function before executi
 
 ### Examples
 The `examples/` directory at the root of the repository contains more detailed examples.
+
+    php examples/objects_list.php
 
 ### Analysis
 Some simple shell one-liners can help you aggregate data from the dumped objects list to get a better grasp at what's happening:
