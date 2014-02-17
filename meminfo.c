@@ -122,11 +122,11 @@ PHP_FUNCTION(meminfo_structs_size)
 
     php_stream_from_zval(stream, &zval_stream);
 
-    stream_printf(stream, "Structs size on this platform:\n");
-    stream_printf(stream, "  Class (zend_class_entry): %ld bytes.\n", sizeof(zend_class_entry));
-    stream_printf(stream, "  Object (zend_object): %ld bytes.\n", sizeof(zend_object));
-    stream_printf(stream, "  Variable (zval): %ld bytes.\n", sizeof(zval));
-    stream_printf(stream, "  Variable value (zvalue_value): %ld bytes.\n", sizeof(zvalue_value));
+    php_stream_printf(stream, "Structs size on this platform:\n");
+    php_stream_printf(stream, "  Class (zend_class_entry): %ld bytes.\n", sizeof(zend_class_entry));
+    php_stream_printf(stream, "  Object (zend_object): %ld bytes.\n", sizeof(zend_object));
+    php_stream_printf(stream, "  Variable (zval): %ld bytes.\n", sizeof(zval));
+    php_stream_printf(stream, "  Variable value (zvalue_value): %ld bytes.\n", sizeof(zvalue_value));
 }
 
 PHP_FUNCTION(meminfo_objects_list)
@@ -140,7 +140,7 @@ PHP_FUNCTION(meminfo_objects_list)
 
     php_stream_from_zval(stream, &zval_stream);
 
-    stream_printf(stream, "Objects list:\n");
+    php_stream_printf(stream, "Objects list:\n");
 
 // TODO: check if object_buckets exists ? See gc_collect_roots from zend_gc.c
     zend_objects_store *objects = &EG(objects_store);
@@ -152,13 +152,13 @@ PHP_FUNCTION(meminfo_objects_list)
 
     for (i = 1; i < objects->top ; i++) {
         if (objects->object_buckets[i].valid) {
-            stream_printf(stream, "  - Class %s, handle %d\n", get_classname(i), i);
+            php_stream_printf(stream, "  - Class %s, handle %d\n", get_classname(i), i);
 
             current_objects++;
         }
      }
 
-    stream_printf(stream, "Total object buckets: %d. Current objects: %d.\n", total_objects_buckets, current_objects);
+    php_stream_printf(stream, "Total object buckets: %d. Current objects: %d.\n", total_objects_buckets, current_objects);
 
 }
 
@@ -173,22 +173,22 @@ PHP_FUNCTION(meminfo_gc_roots_list)
     }
 
     php_stream_from_zval(stream, &zval_stream);
-    stream_printf(stream, "GC roots list:\n");
+    php_stream_printf(stream, "GC roots list:\n");
 
     gc_root_buffer *current = GC_G(roots).next;
 
     while (current != &GC_G(roots)) {
         pz = current->u.pz;
-        stream_printf( stream, "  zval pointer: %p ", (void *) pz); 
+        php_stream_printf( stream, "  zval pointer: %p ", (void *) pz); 
         if (current->handle) {
-            stream_printf(
+            php_stream_printf(
                 stream,
                 "  Class %s, handle %d\n",
                 get_classname(current->handle),
                 current->handle);
         } else {
-            stream_printf(stream, "  Type: %s", get_type_label(pz));
-            stream_printf(stream, ", Ref count GC %d\n", pz->refcount__gc);
+            php_stream_printf(stream, "  Type: %s", get_type_label(pz));
+            php_stream_printf(stream, ", Ref count GC %d\n", pz->refcount__gc);
 
         }
         current = current->next;
@@ -210,7 +210,7 @@ PHP_FUNCTION(meminfo_symbol_table)
 
     main_symbol_table = EG(symbol_table);
 
-    stream_printf(stream, "Nb elements in Symbol Table: %d\n",main_symbol_table.nNumOfElements);
+    php_stream_printf(stream, "Nb elements in Symbol Table: %d\n",main_symbol_table.nNumOfElements);
 
     
 }
