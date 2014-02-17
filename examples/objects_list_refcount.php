@@ -4,19 +4,21 @@ class MyClassA {
 }
 
 class MyClassB {
-    public $otherObject;
-    public $otherObject2;
 }
 
 class MyClassC {
 }
 
 $objectA = new MyClassA();
-$objectAref2 =& $objectA;
 $objectB = new MyClassB();
-$objectB->otherObject = $objectA;
-$objectB->otherObject2 = $objectA;
+$objectA2 = $objectA;
+$objectA3 = $objectA;
 
-
+echo " * zval references have been copied\n";
 meminfo_objects_list(fopen('php://stdout', 'w'));
 
+$objectARef1 = &$objectA;
+$objectARef2 = $objectA;
+
+echo " * objectA turned into object reference\n";
+meminfo_objects_list(fopen('php://stdout', 'w'));
