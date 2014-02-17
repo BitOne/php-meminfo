@@ -152,7 +152,9 @@ PHP_FUNCTION(meminfo_objects_list)
 
     for (i = 1; i < objects->top ; i++) {
         if (objects->object_buckets[i].valid) {
-            stream_printf(stream, "  - Class %s, handle %d\n", get_classname(i), i);
+            struct _store_object *obj = &objects->object_buckets[i].bucket.obj;
+
+            stream_printf(stream, "  - Class %s, handle %d, refCount %d\n", get_classname(i), i, obj->refcount);
 
             current_objects++;
         }
