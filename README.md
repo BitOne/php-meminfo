@@ -71,10 +71,10 @@ Provides a list of live objects with their class and their handle, as well as th
 For example:
 
     Objects list:
-      - Class MyClassB, handle 2
-      - Class MyClassC, handle 5
-      - Class MyClassC, handle 6
-      - Class MyClassC, handle 7
+      - Class MyClassB, handle 2, refCount 1
+      - Class MyClassC, handle 5, refCount 1
+      - Class MyClassC, handle 6, refCount 1
+      - Class MyClassC, handle 7, refcount 1
     Total object buckets: 7. Current objects: 4.
 
 Note: It's a good idea to call the `gc_collect_cycles()` function before executing  `meminfo_objects_list()`, as it will collect dead objects that has not been reclaimed by the ref counter due to circular references. See http://www.php.net/manual/en/features.gc.php for more details.
