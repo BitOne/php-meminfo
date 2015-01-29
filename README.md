@@ -16,6 +16,7 @@ Compiled and tested on:
 
  - PHP 5.4.4 (Debian 7)
  - PHP 5.5.8 (Ubuntu 12.04 LTS)
+ - PHP 5.5.20 (CentOS 7)
 
 Compilation instructions
 ------------------------
@@ -32,7 +33,7 @@ From the root of the extension directory:
     phpize
     ./configure --enable-meminfo
     make
-    cp modules/meminfo.so /path/to/your/extensions/folder
+    make install
 
 ## Enabling the extension
 Add the following line to your php.ini or to a custom file inside /etc/php5/conf.d/ for Debian based system.
