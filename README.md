@@ -11,7 +11,6 @@ For now, PHP Meminfo provides a list of live objects in memory with their class 
 
 Compatibility
 -------------
- 
 Compiled and tested on:
 
  - PHP 5.4.4 (Debian 7)
@@ -43,31 +42,69 @@ Restart your webserver.
 
 Check the PHP Info output and look for the MemInfo data. If you can find it, installation has been successful.
 
-To see the PHP Info output, just create a page calling the phpinfo(); function, a load it from your browser, or call php -i from command line.
+To see the PHP Info output, just create a page calling the phpinfo(); function, and load it from your browser, or call php -i from command line.
 
 Usage
 -----
-All meminfo functions take a stream handle as a parameter. It allows you to specify a file (if needed with a variable name identified to your context), as well as uses standard output with the `php://stdout` stream.
+All meminfo functions take a stream handle as a parameter. It allows you to specify a file (if needed with a variable name identifying your context), as well as to use standard output with the `php://stdout` stream.
+
+## Object instances count per class
+Display the number of instances per class, ordered descending. Very useful to identify the content of a memory leak.
+
+```php
+    meminfo_objects_summary(fopen('php://stdout','w'));
+```
+
+The result will provide something similar to the following example (generated at the end of the Symfony2 console launch)
+
+```
+    Instances count by class:
+    num          #instances   class
+    -----------------------------------------------------------------
+    1            181          Symfony\Component\Console\Input\InputOption
+    2            88           Symfony\Component\Console\Input\InputDefinition
+    3            77           ReflectionObject
+    4            46           Symfony\Component\Console\Input\InputArgument
+    5            2            Symfony\Bridge\Monolog\Logger
+    6            1            Symfony\Component\EventDispatcher\ContainerAwareEventDispatcher
+    7            1            Doctrine\Bundle\MigrationsBundle\Command\MigrationsDiffDoctrineCommand
+    ...
+```
+
+Note: It's a good idea to call the `gc_collect_cycles()` function before executing  `meminfo_objects_summary()`, as it will collect dead objects that has not been reclaimed by the ref counter due to circular references. See http://www.php.net/manual/en/features.gc.php for more details.
+
+### Examples
+The `examples/` directory at the root of the repository contains more detailed examples.
+```bash
+    $ php examples/objects_summary.php
+```
 
 ## Information on structs size
 Display size in byte of main data structs size in PHP. Will mainly differ between 32bits et 64bits environments.
 
+```php
+
     meminfo_structs_size(fopen('php://stdout','w'));
+```
 
 It can be useful to understand difference in memory usage between two platforms.
 
 Example Output on 64bits environment:
 
+```
     Structs size on this platform:
       Class (zend_class_entry): 568 bytes.
       Object (zend_object): 32 bytes.
       Variable (zval): 24 bytes.
       Variable value (zvalue_value): 16 bytes.
+```
 
 ##List of currently active objects
 Provides a list of live objects with their class and their handle, as well as the total number of active objects and the total number of allocated object buckets.
 
+```php
     meminfo_objects_list(fopen('php://stdout','w'));
+```
 
 For example:
 
@@ -78,23 +115,12 @@ For example:
       - Class MyClassC, handle 7, refcount 1
     Total object buckets: 7. Current objects: 4.
 
-Note: It's a good idea to call the `gc_collect_cycles()` function before executing  `meminfo_objects_list()`, as it will collect dead objects that has not been reclaimed by the ref counter due to circular references. See http://www.php.net/manual/en/features.gc.php for more details.
+Note: The same remark about `gc_collect_cycle()` before `meminfo_objects_summary()` applies as well for this function.
 
 ### Examples
 The `examples/` directory at the root of the repository contains more detailed examples.
 
     php examples/objects_list.php
-
-### Analysis
-Some simple shell one-liners can help you aggregate data from the dumped objects list to get a better grasp at what's happening:
-
- - Ordered list of number of objects per class
-
-    cat objects_list.meminfo | grep - | cut -d "," -f 1 | sort | uniq -c | sort -n
-
- - Top 5 of the most present class by objects number
-
-    cat objects_list.meminfo | grep - | cut -d "," -f 1 | sort | uniq -c | sort -nr | head -n 5
 
 Usage in production
 -------------------
