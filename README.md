@@ -138,4 +138,4 @@ Provides aggregated data about memory usage by functions. Far less resource inte
 
 Credits
 -------
-Thanks to Derick Rethans on his inspiritionnal work on the essential XDebug. See http://www.xdebug.org/
+Thanks to Derick Rethans on his inspirational work on the essential XDebug. See http://www.xdebug.org/
