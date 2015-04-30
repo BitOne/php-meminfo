@@ -61,11 +61,11 @@ char* get_type_label(zval* z) {
         case IS_DOUBLE:
             return "double";
             break;
-    
+
         case IS_STRING:
             return "string";
             break;
-    
+
         case IS_ARRAY:
             return "array";
             break;
@@ -181,7 +181,7 @@ PHP_FUNCTION(meminfo_gc_roots_list)
 
     while (current != &GC_G(roots)) {
         pz = current->u.pz;
-        php_stream_printf( stream, "  zval pointer: %p ", (void *) pz); 
+        php_stream_printf( stream, "  zval pointer: %p ", (void *) pz);
         if (current->handle) {
             php_stream_printf(
                 stream,
@@ -214,7 +214,4 @@ PHP_FUNCTION(meminfo_symbol_table)
 
     php_stream_printf(stream, "Nb elements in Symbol Table: %d\n",main_symbol_table.nNumOfElements);
 
-    
 }
-
-
