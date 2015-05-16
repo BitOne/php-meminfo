@@ -148,8 +148,6 @@ PHP_FUNCTION(meminfo_objects_list)
     zend_uint i;
     zend_uint total_objects_buckets = objects->top - 1;
     zend_uint current_objects = 0;
-    zend_object * object;
-    zend_class_entry * class_entry;
 
     for (i = 1; i < objects->top ; i++) {
         if (objects->object_buckets[i].valid) {
@@ -180,7 +178,6 @@ PHP_FUNCTION(meminfo_objects_summary)
 
     zend_objects_store *objects = &EG(objects_store);
     zend_uint i;
-    zend_object *object;
 
     for (i = 1; i < objects->top ; i++) {
         if (objects->object_buckets[i].valid && !objects->object_buckets[i].destructor_called) {
