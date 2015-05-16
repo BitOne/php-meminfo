@@ -220,7 +220,7 @@ PHP_FUNCTION(meminfo_objects_summary)
         ulong index;
 
         zend_hash_get_current_key_ex(classes, &class_name, &class_name_len, &index, 0, &position);
-        php_stream_printf(stream TSRMLS_CC, "%-12d %-12d %s\n", num, Z_LVAL_PP(entry), class_name);
+        php_stream_printf(stream TSRMLS_CC, "%-12d %-12ld %s\n", num, Z_LVAL_PP(entry), class_name);
 
         num++;
     }
