@@ -91,7 +91,7 @@ char* get_type_label(zval* z) {
  *
  * @return char * class name
  */
-const char *get_classname(zend_uint handle)
+const char *get_classname(zend_uint handle TSRMLS_DC)
 {
     zend_objects_store *objects = &EG(objects_store);
     zend_object *object;
@@ -155,7 +155,7 @@ PHP_FUNCTION(meminfo_objects_list)
         if (objects->object_buckets[i].valid) {
             struct _store_object *obj = &objects->object_buckets[i].bucket.obj;
 
-            php_stream_printf(stream, "  - Class %s, handle %d, refCount %d\n", get_classname(i), i, obj->refcount);
+            php_stream_printf(stream, "  - Class %s, handle %d, refCount %d\n", get_classname(i TSRMLS_CC), i, obj->refcount);
 
             current_objects++;
         }
@@ -187,7 +187,7 @@ PHP_FUNCTION(meminfo_objects_summary)
             const char *class_name;
             zval **zv_dest;
 
-            class_name = get_classname(i);
+            class_name = get_classname(i TSRMLS_CC);
 
             if (zend_hash_find(classes, class_name, strlen(class_name)+1, (void **) &zv_dest) == SUCCESS) {
                 Z_LVAL_PP(zv_dest) = Z_LVAL_PP(zv_dest) ++;
@@ -284,7 +284,7 @@ PHP_FUNCTION(meminfo_gc_roots_list)
             php_stream_printf(
                 stream,
                 "  Class %s, handle %d\n",
-                get_classname(current->handle),
+                get_classname(current->handle TSRMLS_CC),
                 current->handle);
         } else {
             php_stream_printf(stream, "  Type: %s", get_type_label(pz));
