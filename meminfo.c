@@ -20,6 +20,7 @@ const zend_function_entry meminfo_functions[] = {
     PHP_FE(meminfo_objects_summary, NULL)
     PHP_FE(meminfo_gc_roots_list, NULL)
     PHP_FE(meminfo_symbol_table, NULL)
+    PHP_FE(meminfo_element_size, NULL)
     {NULL, NULL, NULL}
 };
 
@@ -87,11 +88,11 @@ char* get_type_label(zval* z) {
 /**
  * Return the class associated to the provided object handle
  *
- * @param zend_uint object handle
+ * @param zend_object_handle object handle
  *
  * @return char * class name
  */
-const char *get_classname(zend_uint handle)
+const char *get_classname(zend_object_handle handle)
 {
     zend_objects_store *objects = &EG(objects_store);
     zend_object *object;
@@ -123,11 +124,15 @@ PHP_FUNCTION(meminfo_structs_size)
 
     php_stream_from_zval(stream, &zval_stream);
 
+    php_stream_printf(stream, "Simple Zend Type size on this platform\n");
+    php_stream_printf(stream, "  Zend Unsigned Int (zend_uint): %ld bytes.\n", sizeof(zend_uint));
+    php_stream_printf(stream, "  Zend Unsigned Char (zend_uchar): %ld bytes.\n", sizeof(zend_uchar));
+
     php_stream_printf(stream, "Structs size on this platform:\n");
+    php_stream_printf(stream, "  Variable value (zvalue_value): %ld bytes.\n", sizeof(zvalue_value));
+    php_stream_printf(stream, "  Variable (zval): %ld bytes.\n", sizeof(zval));
     php_stream_printf(stream, "  Class (zend_class_entry): %ld bytes.\n", sizeof(zend_class_entry));
     php_stream_printf(stream, "  Object (zend_object): %ld bytes.\n", sizeof(zend_object));
-    php_stream_printf(stream, "  Variable (zval): %ld bytes.\n", sizeof(zval));
-    php_stream_printf(stream, "  Variable value (zvalue_value): %ld bytes.\n", sizeof(zvalue_value));
 }
 
 PHP_FUNCTION(meminfo_objects_list)
@@ -311,5 +316,190 @@ PHP_FUNCTION(meminfo_symbol_table)
     main_symbol_table = EG(symbol_table);
 
     php_stream_printf(stream, "Nb elements in Symbol Table: %d\n",main_symbol_table.nNumOfElements);
+}
 
+/**
+ * Generate an output to the provided stream with the following format:
+ *   {
+ *       "element1_id" : {
+ *           "type:" "object",
+ *           "size" : 10,
+ *           "children"  : [
+ *               "property1" : "children1_id",
+ *               "property2" : "children2_id"
+ *           ]
+ *       },
+ *      "element2_id" : ...
+ *   }
+ */
+PHP_FUNCTION(meminfo_element_size)
+{
+    zval *zv;
+    zval *zval_stream;
+
+    int first_element;
+
+    php_stream *stream;
+    HashTable *visited_items;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rz", &zval_stream, &zv) == FAILURE) {
+        return;
+    }
+    php_stream_from_zval(stream, &zval_stream);
+
+    php_stream_printf(stream, "{\n");
+
+    ALLOC_HASHTABLE(visited_items);
+    zend_hash_init(visited_items, 1000, NULL, NULL, 0);
+
+    first_element = 1;
+    browse_zvals_with_size(stream, zv, visited_items, &first_element);
+
+    php_stream_printf(stream, "\n    }\n");
+    php_stream_printf(stream, "}\n");
+
+    zend_hash_destroy(visited_items);
+    FREE_HASHTABLE(visited_items);
+}
+
+int visit_item(const char * item_label, HashTable *visited_items)
+{
+    int found = 0;
+    int isset = 1;
+
+
+    if (zend_hash_exists(visited_items, item_label, strlen(item_label))) {
+        found = 1;
+    } else {
+        zend_hash_update(visited_items, item_label, strlen(item_label), &isset, sizeof(int), NULL);
+    }
+
+    return found;
+}
+
+void browse_hash_with_size(php_stream *stream, HashTable *ht, zend_bool is_object, HashTable *visited_items, int *first_element)
+{
+    zval **zval;
+    char *key;
+
+    HashPosition pos;
+    ulong num_key;
+    uint key_len;
+    int i;
+
+    int first_child = 1;
+
+    php_stream_printf(stream, "        \"children\" : {\n");
+
+    zend_hash_internal_pointer_reset_ex(ht, &pos);
+    while (zend_hash_get_current_data_ex(ht, (void **) &zval, &pos) == SUCCESS) {
+
+        if (!first_child) {
+            php_stream_printf(stream, ",\n");
+        } else {
+            first_child = 0;
+        }
+
+        switch (zend_hash_get_current_key_ex(ht, &key, &key_len, &num_key, 0, &pos)) {
+            case HASH_KEY_IS_STRING:
+
+                if (is_object) {
+                    const char *property_name, *class_name;
+                    int mangled = zend_unmangle_property_name(key, key_len - 1, &class_name, &property_name);
+
+                    strcpy(key, property_name);
+                }
+                php_stream_printf(stream, "            \"%s\":\"%p\"", key, *zval );
+                break;
+            case HASH_KEY_IS_LONG:
+                php_stream_printf(stream, "            \"%ld\":\"%p\"", num_key, *zval );
+                break;
+        }
+
+        zend_hash_move_forward_ex(ht, &pos);
+    }
+    php_stream_printf(stream, "\n        }\n");
+
+    zend_hash_internal_pointer_reset_ex(ht, &pos);
+    while (zend_hash_get_current_data_ex(ht, (void **) &zval, &pos) == SUCCESS) {
+        browse_zvals_with_size(stream, *zval, visited_items, first_element);
+        zend_hash_move_forward_ex(ht, &pos);
+    }
+}
+
+void browse_zvals_with_size(php_stream * stream, zval * zv, HashTable *visited_items, int *first_element)
+{
+    char zval_id[16];
+    sprintf(zval_id, "%p", zv);
+
+    if (visit_item(zval_id, visited_items)) {
+        return;
+    }
+
+    if (! *first_element) {
+        php_stream_printf(stream, "\n    },\n");
+    } else {
+        *first_element = 0;
+    }
+
+    php_stream_printf(stream, "    \"%s\" : {\n", zval_id);
+    php_stream_printf(stream, "        \"type:\" : \"%s\",\n", get_type_label(zv));
+    php_stream_printf(stream, "        \"size:\" : \"%ld\"", get_element_size(zv));
+
+    if (Z_TYPE_P(zv) == IS_OBJECT) {
+        HashTable *properties;
+
+        properties = NULL;
+
+        int is_temp;
+
+        php_stream_printf(stream, ",\n");
+        php_stream_printf(stream, "        \"class:\" : \"%s\",\n", get_classname(zv->value.obj.handle));
+
+        properties = Z_OBJDEBUG_P(zv, is_temp);
+
+        if (properties != NULL) {
+            browse_hash_with_size(stream, properties, 1, visited_items, first_element);
+
+            if (is_temp) {
+                zend_hash_destroy(properties);
+                efree(properties);
+            }
+        }
+    } else if (Z_TYPE_P(zv) == IS_ARRAY) {
+        php_stream_printf(stream, ",\n");
+        browse_hash_with_size(stream, zv->value.ht, 0, visited_items, first_element);
+    } else {
+        php_stream_printf(stream, "\n");
+    }
+
+}
+/**
+ * Get size of an element
+ *
+ * @param zval *zv Zval of the element
+ *
+ * @return zend_ulong
+ */
+zend_ulong get_element_size(zval *zv)
+{
+    zend_ulong size;
+
+    size = sizeof(zval);
+
+    switch (Z_TYPE_P(zv)) {
+        case IS_STRING:
+            size += zv->value.str.len;
+            break;
+
+        case IS_ARRAY:
+            size += sizeof(HashTable);
+            break;
+
+        case IS_OBJECT:
+            size += sizeof(zend_object);
+            break;
+    }
+
+    return size;
 }
