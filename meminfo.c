@@ -443,8 +443,8 @@ void browse_zvals_with_size(php_stream * stream, zval * zv, HashTable *visited_i
     }
 
     php_stream_printf(stream, "    \"%s\" : {\n", zval_id);
-    php_stream_printf(stream, "        \"type:\" : \"%s\",\n", get_type_label(zv));
-    php_stream_printf(stream, "        \"size:\" : \"%ld\"", get_element_size(zv));
+    php_stream_printf(stream, "        \"type\" : \"%s\",\n", get_type_label(zv));
+    php_stream_printf(stream, "        \"size\" : \"%ld\"", get_element_size(zv));
 
     if (Z_TYPE_P(zv) == IS_OBJECT) {
         HashTable *properties;
@@ -454,7 +454,7 @@ void browse_zvals_with_size(php_stream * stream, zval * zv, HashTable *visited_i
         int is_temp;
 
         php_stream_printf(stream, ",\n");
-        php_stream_printf(stream, "        \"class:\" : \"%s\",\n", get_classname(zv->value.obj.handle));
+        php_stream_printf(stream, "        \"class\" : \"%s\",\n", get_classname(zv->value.obj.handle));
 
         properties = Z_OBJDEBUG_P(zv, is_temp);
 
