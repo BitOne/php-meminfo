@@ -33,6 +33,17 @@ function appendFullSize(array &$sizeData)
     }
 }
 
+function appendParents(array &$sizeData)
+{
+    foreach ($sizeData as $itemId => $itemData) {
+        if (isset($sizeData[$itemId]['children'])) {
+            foreach ($sizeData[$itemId]['children'] as $index => $childId) {
+                $sizeData[$childId]['parents'][$itemId."::".$index] = $itemId;
+            }
+        }
+    }
+}
+
 function getSortedSizeData(array $sizeData)
 {
     uasort($sizeData, function($itemA, $itemB) {
@@ -88,21 +99,55 @@ function showItemId(array $sizeData, $meminfoFile, $itemId)
 {
     $itemData = $sizeData[$itemId];
 
-    printf ("<h2>Item %s</h2>", $itemId);
+    printf ('<p><a href="?file=%s">Go back to summary</a></p>', $meminfoFile);
+
+    printf ("<h2>%s %s</h2>", $itemData['type'], $itemId);
 
     echo "<h3>Information</h3>";
+    echo "<ul>";
+    if (isset($itemData['class'])) {
+        printf ('<li>Class: %s</li>', $itemData['class']);
+    }
+    printf ('<li>Self Size: %s</li>', $itemData['size']);
+    printf ('<li>Full Size: %s</li>', $itemData['full_size']);
 
-    echo "TODO";
+    echo "</ul>";
+
 
     echo "<h3>Parents</h3>";
 
-    echo "TODO";
+    echo "<table>\n";
+    echo "<tr>\n";
+    echo "<th>Key</th><th>Item id</th><th>Item type</th><th>Object class</th><th>Total size</th><th>Self size</th><th>Children count</th><th>Child of</th>\n";
+    echo "</tr>\n";
+
+    foreach ($itemData['parents'] as $parentKey => $parentId) {
+        $parentData = $sizeData[$parentId];
+
+        echo "<tr>\n";
+        printf ("<td>%s</td>", $parentKey);
+        printf (
+            "<td><a href='?file=%s&item_id=%s'>%s</a></td>\n",
+            $meminfoFile,
+            $parentId,
+            $parentId
+        );
+        printf ("<td>%s</td>\n", $parentData['type']);
+        $class = isset($parentData['class'])?$parentData['class']:"";
+        printf ("<td>%s</td>\n", $class);
+        printf ("<td>%s</td>\n", $parentData['full_size']);
+        printf ("<td>%s</td>\n", $parentData['size']);
+        printf ("<td>%s</td>\n", count($parentData['children']));
+        printf ("<td>%s</td>\n", "TODO");
+        echo "</tr>\n";
+    }
+    echo "</table>\n";
 
     echo "<h3>Children</h3>";
 
     echo "<table>\n";
     echo "<tr>\n";
-    echo "<th>Array Key/Object Attribute</th><th>Item id</th><th>Item type</th><th>Object class</th><th>Total size</th><th>Self size</th><th>Children count</th><th>Child of</th>\n";
+    echo "<th>Key</th><th>Item id</th><th>Item type</th><th>Object class</th><th>Total size</th><th>Self size</th><th>Children count</th><th>Child of</th>\n";
     echo "</tr>\n";
 
     foreach ($itemData['children'] as $childKey => $childId) {
@@ -140,6 +185,7 @@ if (!file_exists($meminfoFile)) {
 
 $sizeData = json_decode(file_get_contents($meminfoFile), true);
 appendFullSize($sizeData);
+appendParents($sizeData);
 
 if (isset($_GET['item_id'])) {
     $itemId = $_GET['item_id'];
