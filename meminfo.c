@@ -20,7 +20,7 @@ const zend_function_entry meminfo_functions[] = {
     PHP_FE(meminfo_objects_summary, NULL)
     PHP_FE(meminfo_gc_roots_list, NULL)
     PHP_FE(meminfo_symbol_table, NULL)
-    PHP_FE(meminfo_element_size, NULL)
+    PHP_FE(meminfo_size_info, NULL)
     {NULL, NULL, NULL}
 };
 
@@ -332,19 +332,21 @@ PHP_FUNCTION(meminfo_symbol_table)
  *      "element2_id" : ...
  *   }
  */
-PHP_FUNCTION(meminfo_element_size)
+PHP_FUNCTION(meminfo_size_info)
 {
-    zval *zv;
     zval *zval_stream;
+    zend_execute_data *exec_frame;
+    HashTable *frame_symbol_table, *global_symbol_table;
 
     int first_element;
 
     php_stream *stream;
     HashTable *visited_items;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rz", &zval_stream, &zv) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zval_stream) == FAILURE) {
         return;
     }
+
     php_stream_from_zval(stream, &zval_stream);
 
     php_stream_printf(stream, "{\n");
@@ -353,13 +355,41 @@ PHP_FUNCTION(meminfo_element_size)
     zend_hash_init(visited_items, 1000, NULL, NULL, 0);
 
     first_element = 1;
-    browse_zvals_with_size(stream, zv, visited_items, &first_element);
+
+    exec_frame = EG(current_execute_data);
+
+    while (exec_frame) {
+        frame_symbol_table = exec_frame->symbol_table;
+
+        browse_zvals_from_symbol_table(stream, frame_symbol_table, visited_items, &first_element);
+
+        exec_frame = exec_frame->prev_execute_data;
+    }
+
+    global_symbol_table = &EG(symbol_table);
+
+    browse_zvals_from_symbol_table(stream, global_symbol_table, visited_items, &first_element);
 
     php_stream_printf(stream, "\n    }\n");
     php_stream_printf(stream, "}\n");
 
     zend_hash_destroy(visited_items);
     FREE_HASHTABLE(visited_items);
+}
+
+void browse_zvals_from_symbol_table(php_stream *stream, HashTable *symbol_table, HashTable * visited_items, int *first_element)
+{
+    zval **zval;
+
+    HashPosition pos;
+
+    zend_hash_internal_pointer_reset_ex(symbol_table, &pos);
+    while (zend_hash_get_current_data_ex(symbol_table, (void **) &zval, &pos) == SUCCESS) {
+
+        browse_zval_with_size(stream, *zval, visited_items, first_element);
+
+        zend_hash_move_forward_ex(symbol_table, &pos);
+    }
 }
 
 int visit_item(const char * item_label, HashTable *visited_items)
@@ -422,12 +452,12 @@ void browse_hash_with_size(php_stream *stream, HashTable *ht, zend_bool is_objec
 
     zend_hash_internal_pointer_reset_ex(ht, &pos);
     while (zend_hash_get_current_data_ex(ht, (void **) &zval, &pos) == SUCCESS) {
-        browse_zvals_with_size(stream, *zval, visited_items, first_element);
+        browse_zval_with_size(stream, *zval, visited_items, first_element);
         zend_hash_move_forward_ex(ht, &pos);
     }
 }
 
-void browse_zvals_with_size(php_stream * stream, zval * zv, HashTable *visited_items, int *first_element)
+void browse_zval_with_size(php_stream * stream, zval * zv, HashTable *visited_items, int *first_element)
 {
     char zval_id[16];
     sprintf(zval_id, "%p", zv);
