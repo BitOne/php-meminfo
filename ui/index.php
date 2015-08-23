@@ -149,9 +149,9 @@ function showItemId(array $sizeData, $meminfoFile, $itemId)
     if (isset($itemData['class'])) {
         printf ('<li>Class: %s</li>', $itemData['class']);
     }
-    printf ('<li>Self Size: %s</li>', $itemData['size']);
+    printf ('<li>Self Size: %s</li>', number_format($itemData['size']));
     printf ('<li>Accounted In: %s</li>', $itemData['accounted_in']);
-    printf ('<li>Full Size: %s</li>', $itemData['full_size']);
+    printf ('<li>Full Size: %s</li>', number_format($itemData['full_size']));
 
     echo "</ul>";
 
@@ -176,8 +176,8 @@ function showItemId(array $sizeData, $meminfoFile, $itemId)
         printf ("<td>%s</td>\n", $parentData['type']);
         $class = isset($parentData['class'])?$parentData['class']:"";
         printf ("<td>%s</td>\n", $class);
-        printf ("<td>%s</td>\n", $parentData['full_size']);
-        printf ("<td>%s</td>\n", $parentData['size']);
+        printf ("<td>%s</td>\n", number_format($parentData['full_size']));
+        printf ("<td>%s</td>\n", number_format($parentData['size']));
         printf ("<td>%s</td>\n", count($parentData['children']));
         printf ("<td>%s</td>\n", getParentsList($parentData));
         echo "</tr>\n";
@@ -220,8 +220,8 @@ function showItemId(array $sizeData, $meminfoFile, $itemId)
         printf ("<td>%s</td>\n", $childData['type']);
         $class = isset($childData['class'])?$childData['class']:"";
         printf ("<td>%s</td>\n", $class);
-        printf ("<td>%s</td>\n", $childData['full_size']);
-        printf ("<td>%s</td>\n", $childData['size']);
+        printf ("<td>%s</td>\n", number_format($childData['full_size']));
+        printf ("<td>%s</td>\n", number_format($childData['size']));
         printf ("<td>%s</td>\n", count($childData['children']));
         printf ("<td>%s</td>\n", getParentsList($childData));
         echo "</tr>\n";
