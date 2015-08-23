@@ -70,6 +70,7 @@ function showTopConsumers(array $sizeData, $meminfoFile, $maxTopConsumers = 100)
     echo "<html>\n";
     echo "<head>\n";
     printf("<title>Summary for %s</title>\n", $meminfoFile);
+    echo '<link rel="stylesheet" type="text/css" href="style.css">';
     echo "</head>\n";
 
     echo "<body>\n";
@@ -96,8 +97,8 @@ function showTopConsumers(array $sizeData, $meminfoFile, $maxTopConsumers = 100)
         printf ("<td>%s</td>\n", $itemData['type']);
         $class = isset($itemData['class'])?$itemData['class']:"";
         printf ("<td>%s</td>\n", $class);
-        printf ("<td>%s</td>\n", $itemData['full_size']);
-        printf ("<td>%s</td>\n", $itemData['size']);
+        printf ("<td>%s</td>\n", number_format($itemData['full_size']));
+        printf ("<td>%s</td>\n", number_format($itemData['size']));
         printf ("<td>%s</td>\n", count($itemData['children']));
         printf ("<td>%s</td>\n", getParentsList($itemData));
         echo "</tr>\n";
@@ -110,7 +111,7 @@ function showTopConsumers(array $sizeData, $meminfoFile, $maxTopConsumers = 100)
 function getParentsList(array $itemData, $maxParents = 5)
 {
     $parentsList = implode(
-        ',',
+        ', ',
         array_slice(
             array_keys(
                 $itemData['parents']
@@ -134,6 +135,7 @@ function showItemId(array $sizeData, $meminfoFile, $itemId)
     echo "<html>\n";
     echo "<head>\n";
     printf ("<title>%s %s</title>", $itemData['type'], $itemId);
+    echo '<link rel="stylesheet" type="text/css" href="style.css">';
     echo "</head>\n";
 
     echo "<body>\n";
