@@ -276,6 +276,12 @@ if (!file_exists($meminfoFile)) {
 }
 
 $sizeData = json_decode(file_get_contents($meminfoFile), true);
+
+if (null === $sizeData) {
+    printf('Invalid JSON format: %s.', json_last_error());
+    die();
+}
+
 appendFullSize($sizeData);
 appendParents($sizeData);
 

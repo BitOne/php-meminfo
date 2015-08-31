@@ -6,6 +6,7 @@
 #include "php_meminfo.h"
 
 #include "ext/standard/info.h"
+#include "ext/standard/php_string.h"
 
 #include "zend_extensions.h"
 #include "zend_exceptions.h"
@@ -446,7 +447,7 @@ void browse_hash_with_size(php_stream *stream, HashTable *ht, zend_bool is_objec
 
                     strcpy(key, property_name);
                 }
-                php_stream_printf(stream, "            \"%s\":\"%p\"", key, *zval );
+                php_stream_printf(stream, "            \"%s\":\"%p\"", escape_for_json(key), *zval );
                 break;
             case HASH_KEY_IS_LONG:
                 php_stream_printf(stream, "            \"%ld\":\"%p\"", num_key, *zval );
@@ -491,7 +492,7 @@ void browse_zval_with_size(php_stream * stream, zval * zv, HashTable *visited_it
         int is_temp;
 
         php_stream_printf(stream, ",\n");
-        php_stream_printf(stream, "        \"class\" : \"%s\",\n", get_classname(zv->value.obj.handle));
+        php_stream_printf(stream, "        \"class\" : \"%s\",\n", escape_for_json(get_classname(zv->value.obj.handle)));
 
         properties = Z_OBJDEBUG_P(zv, is_temp);
 
@@ -539,4 +540,17 @@ zend_ulong get_element_size(zval *zv)
     }
 
     return size;
+}
+
+/**
+ * Escape the \ and " characters for JSON encoding
+ */
+char * escape_for_json(const char *s)
+{
+    int new_str_len;
+    char *s1;
+
+    s1 = php_str_to_str(s, strlen(s), "\\", 1, "\\\\", 2, &new_str_len);
+
+    return  php_str_to_str(s1, strlen(s1), "\"", 1, "\"", 2, &new_str_len);
 }
