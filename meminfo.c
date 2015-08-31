@@ -361,7 +361,14 @@ PHP_FUNCTION(meminfo_size_info)
     while (exec_frame) {
         frame_symbol_table = exec_frame->symbol_table;
 
-        browse_zvals_from_symbol_table(stream, frame_symbol_table, visited_items, &first_element);
+
+    /* TODO Check why it is NULL sometimes
+     * See some example where the symbol table
+     * seems to be "regenerated"
+     */
+	if (frame_symbol_table != NULL) {
+		browse_zvals_from_symbol_table(stream, frame_symbol_table, visited_items, &first_element);
+	}
 
         exec_frame = exec_frame->prev_execute_data;
     }
