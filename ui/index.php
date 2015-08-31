@@ -1,4 +1,14 @@
 <?php
+function getTotalSize(array $sizeData)
+{
+    $totalSize = 0;
+    foreach ($sizeData as $sizeItem) {
+        $totalSize += $sizeItem['size'];
+    }
+
+    return $totalSize;
+}
+
 function computeFullSize($itemId, array $itemData, array &$sizeData, array &$visitedItems)
 {
     $size = $itemData['size'];
@@ -64,7 +74,7 @@ function getTopConsumers(array $sizeData, $limit)
     return array_slice($sizeData, 0, $limit);
 }
 
-function showTopConsumers(array $sizeData, $meminfoFile, $maxTopConsumers = 100)
+function showTopConsumers(array $sizeData, $meminfoFile, $totalSize, $maxTopConsumers = 100)
 {
     $topConsumers = getTopConsumers($sizeData, $maxTopConsumers);
     echo "<html>\n";
@@ -77,13 +87,16 @@ function showTopConsumers(array $sizeData, $meminfoFile, $maxTopConsumers = 100)
     printf("<h1>Summary for memory info %s</h1>\n", $meminfoFile);
 
     echo "<h2>Metadata</h2>\n";
+    echo "<p><ul>";
+    printf("<li>Memory used for data: %s</li>", number_format($totalSize));
+    echo "</ul></p>";
 
     echo "<h2>Classes info</h2>\n";
 
     printf("<h2>Top %s Consumers</h2>\n", $maxTopConsumers);
     echo "<table>\n";
     echo "<tr>\n";
-    echo "<th>Item id</th><th>Item type</th><th>Object class</th><th>Total size</th><th>Self size</th><th>Children count</th><th>Child of</th>\n";
+    echo "<th>Item id</th><th>Item type</th><th>Object class</th><th>% data total</th><th>Total size</th><th>Self size</th><th>Children count</th><th>Child of</th>\n";
     echo "</tr>\n";
 
     foreach ($topConsumers as $itemId => $itemData) {
@@ -97,6 +110,7 @@ function showTopConsumers(array $sizeData, $meminfoFile, $maxTopConsumers = 100)
         printf ("<td>%s</td>\n", $itemData['type']);
         $class = isset($itemData['class'])?$itemData['class']:"";
         printf ("<td>%s</td>\n", $class);
+        printf ("<td>%s%%</td>\n", round($itemData['full_size']/$totalSize * 100, 2));
         printf ("<td>%s</td>\n", number_format($itemData['full_size']));
         printf ("<td>%s</td>\n", number_format($itemData['size']));
         printf ("<td>%s</td>\n", count($itemData['children']));
@@ -282,6 +296,7 @@ if (null === $sizeData) {
     die();
 }
 
+$totalSize = getTotalSize($sizeData);
 appendFullSize($sizeData);
 appendParents($sizeData);
 
@@ -289,7 +304,7 @@ if (isset($_GET['item_id'])) {
     $itemId = $_GET['item_id'];
     showItemId($sizeData, $meminfoFile, $itemId);
 } else {
-    showTopConsumers($sizeData, $meminfoFile);
+    showTopConsumers($sizeData, $meminfoFile, $totalSize);
 }
 
 
