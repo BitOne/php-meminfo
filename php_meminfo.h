@@ -21,7 +21,7 @@ void browse_zval_with_size(php_stream * stream, zval * zv, HashTable *visited_it
 void browse_hash_with_size(php_stream *stream, HashTable *ht, zend_bool is_object, HashTable *visited_items, int *first_element);
 void browse_zvals_from_symbol_table(php_stream *stream, HashTable *symbol_table, HashTable * visited_items, int *first_element);
 char * escape_for_json(const char *s);
-
+char * size_info_generate_header(char *header);
 
 extern zend_module_entry meminfo_entry;
 #define phpext_meminfo_ptr &meminfo_module_entry

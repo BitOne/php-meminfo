@@ -338,6 +338,7 @@ PHP_FUNCTION(meminfo_size_info)
     zval *zval_stream;
     zend_execute_data *exec_frame;
     HashTable *frame_symbol_table, *global_symbol_table;
+    char header[1024];
 
     int first_element;
 
@@ -349,8 +350,13 @@ PHP_FUNCTION(meminfo_size_info)
     }
 
     php_stream_from_zval(stream, &zval_stream);
-
     php_stream_printf(stream, "{\n");
+
+    php_stream_printf(stream, "\"header\":\n");
+    php_stream_printf(stream, size_info_generate_header(header));
+    php_stream_printf(stream, ",\n");
+
+    php_stream_printf(stream, "\"items\": {\n");
 
     ALLOC_HASHTABLE(visited_items);
     zend_hash_init(visited_items, 1000, NULL, NULL, 0);
@@ -363,13 +369,13 @@ PHP_FUNCTION(meminfo_size_info)
         frame_symbol_table = exec_frame->symbol_table;
 
 
-    /* TODO Check why it is NULL sometimes
-     * See some example where the symbol table
-     * seems to be "regenerated"
-     */
-	if (frame_symbol_table != NULL) {
-		browse_zvals_from_symbol_table(stream, frame_symbol_table, visited_items, &first_element);
-	}
+        /* TODO Check why it is NULL sometimes
+         * See some example where the symbol table
+         * seems to be "regenerated"
+         */
+        if (frame_symbol_table != NULL) {
+            browse_zvals_from_symbol_table(stream, frame_symbol_table, visited_items, &first_element);
+        }
 
         exec_frame = exec_frame->prev_execute_data;
     }
@@ -379,7 +385,7 @@ PHP_FUNCTION(meminfo_size_info)
     browse_zvals_from_symbol_table(stream, global_symbol_table, visited_items, &first_element);
 
     php_stream_printf(stream, "\n    }\n");
-    php_stream_printf(stream, "}\n");
+    php_stream_printf(stream, "}\n}\n");
 
     zend_hash_destroy(visited_items);
     FREE_HASHTABLE(visited_items);
@@ -552,5 +558,36 @@ char * escape_for_json(const char *s)
 
     s1 = php_str_to_str(s, strlen(s), "\\", 1, "\\\\", 2, &new_str_len);
 
-    return  php_str_to_str(s1, strlen(s1), "\"", 1, "\"", 2, &new_str_len);
+    return  php_str_to_str(s1, strlen(s1), "\"", 1, "\\\"", 2, &new_str_len);
+}
+
+/**
+ * Generate a JSON header for the meminfo
+ *
+ */
+char * size_info_generate_header(char * header)
+{
+    size_t memory_usage;
+    size_t memory_usage_real;
+    size_t peak_memory_usage;
+    size_t peak_memory_usage_real;
+    size_t class_memory_usage;
+
+    memory_usage = zend_memory_usage(0);
+    memory_usage_real = zend_memory_usage(1);
+
+    peak_memory_usage = zend_memory_peak_usage(0);
+    peak_memory_usage_real = zend_memory_peak_usage(1);
+
+    snprintf(
+        header,
+        1024,
+        "{ \"memory_usage\":%d,\n\"memory_usage_real\":%d,\n\"peak_memory_usage\":%d\n, \"peak_memory_usage_real\":%d\n}",
+        memory_usage,
+        memory_usage_real,
+        peak_memory_usage,
+        peak_memory_usage_real
+    );
+
+    return header;
 }

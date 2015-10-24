@@ -1,15 +1,15 @@
 <?php
-function getTotalSize(array $sizeData)
+function getTotalSize(array $itemsData)
 {
     $totalSize = 0;
-    foreach ($sizeData as $sizeItem) {
+    foreach ($itemsData as $sizeItem) {
         $totalSize += $sizeItem['size'];
     }
 
     return $totalSize;
 }
 
-function computeFullSize($itemId, array $itemData, array &$sizeData, array &$visitedItems)
+function computeFullSize($itemId, array $itemData, array &$itemsData, array &$visitedItems)
 {
     $size = $itemData['size'];
 
@@ -18,38 +18,38 @@ function computeFullSize($itemId, array $itemData, array &$sizeData, array &$vis
             if (!isset($visitedItems[$childId])) {
                 $visitedItems[$childId] = true;
 
-                if (!isset($sizeData[$childId])) {
+                if (!isset($itemsData[$childId])) {
                     //echo "Unable to find $childId. Should be there, problem at memory dumping\n";
                 } else {
-                    $size += computeFullSize($childId, $sizeData[$childId], $sizeData, $visitedItems);
-                    $sizeData[$childId]['accounted_in'] = $itemId;
+                    $size += computeFullSize($childId, $itemsData[$childId], $itemsData, $visitedItems);
+                    $itemsData[$childId]['accounted_in'] = $itemId;
                 }
             }
         }
     }
 
-    $sizeData[$itemId]['full_size'] = $size;
+    $itemsData[$itemId]['full_size'] = $size;
 
     return $size;
 }
 
-function appendFullSize(array &$sizeData)
+function appendFullSize(array &$itemsData)
 {
     $visitedItems = array();
 
-    foreach ($sizeData as $itemId => $itemData) {
-        if (!isset($sizeData[$itemId]['full_size'])) {
-            $sizeData[$itemId]['full_size'] = computeFullSize($itemId, $itemData, $sizeData, $visitedItems);
+    foreach ($itemsData as $itemId => $itemData) {
+        if (!isset($itemsData[$itemId]['full_size'])) {
+            $itemsData[$itemId]['full_size'] = computeFullSize($itemId, $itemData, $itemsData, $visitedItems);
         }
     }
 }
 
-function appendParents(array &$sizeData)
+function appendParents(array &$itemsData)
 {
-    foreach ($sizeData as $itemId => $itemData) {
-        if (isset($sizeData[$itemId]['children'])) {
-            foreach ($sizeData[$itemId]['children'] as $index => $childId) {
-                $sizeData[$childId]['parents'][$itemId."::".$index] = $itemId;
+    foreach ($itemsData as $itemId => $itemData) {
+        if (isset($itemsData[$itemId]['children'])) {
+            foreach ($itemsData[$itemId]['children'] as $index => $childId) {
+                $itemsData[$childId]['parents'][$itemId."::".$index] = $itemId;
             }
         }
     }
@@ -67,16 +67,16 @@ function compareFullSize(array $itemA, array $itemB)
     return ($fullSizeA < $fullSizeB) ? 1 : -1;
 }
 
-function getTopConsumers(array $sizeData, $limit)
+function getTopConsumers(array $itemsData, $limit)
 {
-    uasort($sizeData, "compareFullSize");
+    uasort($itemsData, "compareFullSize");
 
-    return array_slice($sizeData, 0, $limit);
+    return array_slice($itemsData, 0, $limit);
 }
 
-function showTopConsumers(array $sizeData, $meminfoFile, $totalSize, $maxTopConsumers = 100)
+function showTopConsumers(array $header, array $itemsData, $meminfoFile, $totalSize, $maxTopConsumers = 100)
 {
-    $topConsumers = getTopConsumers($sizeData, $maxTopConsumers);
+    $topConsumers = getTopConsumers($itemsData, $maxTopConsumers);
     echo "<html>\n";
     echo "<head>\n";
     printf("<title>Summary for %s</title>\n", $meminfoFile);
@@ -88,7 +88,11 @@ function showTopConsumers(array $sizeData, $meminfoFile, $totalSize, $maxTopCons
 
     echo "<h2>Metadata</h2>\n";
     echo "<p><ul>";
-    printf("<li>Memory used for data: %s bytes</li>", number_format($totalSize));
+    printf("<li>Memory usage: %s bytes</li>", number_format($header['memory_usage']));
+    printf("<li>Memory usage (real): %s bytes</li>", number_format($header['memory_usage_real']));
+    printf("<li>Peak Memory usage: %s bytes</li>", number_format($header['peak_memory_usage']));
+    printf("<li>Peak Memory usage (real): %s bytes</li>", number_format($header['peak_memory_usage_real']));
+    printf("<li>Items computed memory usage: %s bytes</li>", number_format($totalSize));
     echo "</ul></p>";
 
     //echo "<h2>Classes info</h2>\n";
@@ -143,9 +147,13 @@ function getParentsList(array $itemData, $maxParents = 5)
     return $parentsList;
 }
 
-function showItemId(array $sizeData, $meminfoFile, $itemId)
+function showItemId(array $itemsData, $meminfoFile, $itemId)
 {
-    $itemData = $sizeData[$itemId];
+    $itemData = $itemsData[$itemId];
+
+    if (null === $itemData) {
+        die("Unable to find item with id $itemId");
+    }
 
     echo "<html>\n";
     echo "<head>\n";
@@ -178,7 +186,7 @@ function showItemId(array $sizeData, $meminfoFile, $itemId)
     echo "</tr>\n";
 
     foreach ($itemData['parents'] as $parentKey => $parentId) {
-        $parentData = $sizeData[$parentId];
+        $parentData = $itemsData[$parentId];
 
         echo "<tr>\n";
         printf ("<td>%s</td>", $parentKey);
@@ -203,7 +211,7 @@ function showItemId(array $sizeData, $meminfoFile, $itemId)
     $nonAccountedChildren = [];
 
     foreach ($itemData['children'] as $childKey => $childId) {
-        $childData = $sizeData[$childId];
+        $childData = $itemsData[$childId];
         $childData['item_id'] = $childId;
 
         if ($childData['accounted_in'] == $itemId) {
@@ -290,21 +298,24 @@ if (!file_exists($meminfoFile)) {
     die("Unable to find $meminfoFile");
 }
 
-$sizeData = json_decode(file_get_contents($meminfoFile), true);
+$data = json_decode(file_get_contents($meminfoFile), true);
 
-if (null === $sizeData) {
+if (null === $data) {
     printf('Invalid JSON format: %s.', json_last_error());
     die();
 }
 
-$totalSize = getTotalSize($sizeData);
-appendFullSize($sizeData);
-appendParents($sizeData);
+$header = $data['header'];
+$itemsData = $data['items'];
+
+$totalSize = getTotalSize($itemsData);
+appendFullSize($itemsData);
+appendParents($itemsData);
 
 if (isset($_GET['item_id'])) {
     $itemId = $_GET['item_id'];
-    showItemId($sizeData, $meminfoFile, $itemId);
+    showItemId($itemsData, $meminfoFile, $itemId);
 } else {
-    showTopConsumers($sizeData, $meminfoFile, $totalSize);
+    showTopConsumers($header, $itemsData, $meminfoFile, $totalSize);
 }
 
