@@ -88,10 +88,11 @@ function showTopConsumers(array $sizeData, $meminfoFile, $totalSize, $maxTopCons
 
     echo "<h2>Metadata</h2>\n";
     echo "<p><ul>";
-    printf("<li>Memory used for data: %s</li>", number_format($totalSize));
+    printf("<li>Memory used for data: %s bytes</li>", number_format($totalSize));
     echo "</ul></p>";
 
-    echo "<h2>Classes info</h2>\n";
+    //echo "<h2>Classes info</h2>\n";
+    // TODO
 
     printf("<h2>Top %s Consumers</h2>\n", $maxTopConsumers);
     echo "<table>\n";
@@ -163,9 +164,9 @@ function showItemId(array $sizeData, $meminfoFile, $itemId)
     if (isset($itemData['class'])) {
         printf ('<li>Class: %s</li>', $itemData['class']);
     }
-    printf ('<li>Self Size: %s</li>', number_format($itemData['size']));
+    printf ('<li>Self Size: %s bytes</li>', number_format($itemData['size']));
     printf ('<li>Accounted In: %s</li>', $itemData['accounted_in']);
-    printf ('<li>Full Size: %s</li>', number_format($itemData['full_size']));
+    printf ('<li>Full Size: %s bytes</li>', number_format($itemData['full_size']));
 
     echo "</ul>";
 
@@ -261,14 +262,14 @@ function showItemId(array $sizeData, $meminfoFile, $itemId)
         printf ("<td>%s</td>\n", $childData['type']);
         $class = isset($childData['class'])?$childData['class']:"";
         printf ("<td>%s</td>\n", $class);
-        printf ("<td>%s</td>\n", $childData['full_size']);
+        printf ("<td>%s</td>\n", number_format($childData['full_size']));
         printf (
             "<td><a href='?file=%s&item_id=%s'>%s</a></td>\n",
             $meminfoFile,
             $childData['accounted_in'],
             $childData['accounted_in']
         );
-        printf ("<td>%s</td>\n", $childData['size']);
+        printf ("<td>%s</td>\n", number_format($childData['size']));
         printf ("<td>%s</td>\n", count($childData['children']));
         printf ("<td>%s</td>\n", getParentsList($childData));
         echo "</tr>\n";
@@ -306,5 +307,4 @@ if (isset($_GET['item_id'])) {
 } else {
     showTopConsumers($sizeData, $meminfoFile, $totalSize);
 }
-
 
