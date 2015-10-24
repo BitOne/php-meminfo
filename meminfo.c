@@ -46,72 +46,6 @@ zend_module_entry meminfo_module_entry = {
 ZEND_GET_MODULE(meminfo)
 #endif
 
-//TODO: use gettype directly ? Possible ?
-char* get_type_label(zval* z) {
-    switch (Z_TYPE_P(z)) {
-        case IS_NULL:
-            return "NULL";
-            break;
-
-        case IS_BOOL:
-            return "boolean";
-            break;
-
-        case IS_LONG:
-            return "integer";
-            break;
-
-        case IS_DOUBLE:
-            return "double";
-            break;
-
-        case IS_STRING:
-            return "string";
-            break;
-
-        case IS_ARRAY:
-            return "array";
-            break;
-
-        case IS_OBJECT:
-            return "object";
-            break;
-
-        case IS_RESOURCE:
-            return "resource";
-            break;
-
-        default:
-            return "Unknown type";
-    }
-}
-
-/**
- * Return the class associated to the provided object handle
- *
- * @param zend_object_handle object handle
- *
- * @return char * class name
- */
-const char *get_classname(zend_object_handle handle)
-{
-    zend_objects_store *objects = &EG(objects_store);
-    zend_object *object;
-    zend_class_entry *class_entry;
-    const char* class_name;
-
-    class_name = "";
-
-    if (objects->object_buckets[handle].valid) {
-        struct _store_object *obj = &objects->object_buckets[handle].bucket.obj;
-        object =  (zend_object * ) obj->object;
-
-        class_entry = object->ce;
-        class_name = class_entry->name;
-    }
-
-    return class_name;
-}
 
 
 PHP_FUNCTION(meminfo_structs_size)
@@ -161,7 +95,7 @@ PHP_FUNCTION(meminfo_objects_list)
         if (objects->object_buckets[i].valid) {
             struct _store_object *obj = &objects->object_buckets[i].bucket.obj;
 
-            php_stream_printf(stream, "  - Class %s, handle %d, refCount %d\n", get_classname(i), i, obj->refcount);
+            php_stream_printf(stream, "  - Class %s, handle %d, refCount %d\n", meminfo_get_classname(i), i, obj->refcount);
 
             current_objects++;
         }
@@ -193,7 +127,7 @@ PHP_FUNCTION(meminfo_objects_summary)
             const char *class_name;
             zval **zv_dest;
 
-            class_name = get_classname(i);
+            class_name = meminfo_get_classname(i);
 
             if (zend_hash_find(classes, class_name, strlen(class_name)+1, (void **) &zv_dest) == SUCCESS) {
                 Z_LVAL_PP(zv_dest) = Z_LVAL_PP(zv_dest) ++;
@@ -290,10 +224,10 @@ PHP_FUNCTION(meminfo_gc_roots_list)
             php_stream_printf(
                 stream,
                 "  Class %s, handle %d\n",
-                get_classname(current->handle),
+                meminfo_get_classname(current->handle),
                 current->handle);
         } else {
-            php_stream_printf(stream, "  Type: %s", get_type_label(pz));
+            php_stream_printf(stream, "  Type: %s", meminfo_get_type_label(pz));
             php_stream_printf(stream, ", Ref count GC %d\n", pz->refcount__gc);
 
         }
@@ -353,7 +287,7 @@ PHP_FUNCTION(meminfo_size_info)
     php_stream_printf(stream, "{\n");
 
     php_stream_printf(stream, "\"header\":\n");
-    php_stream_printf(stream, size_info_generate_header(header));
+    php_stream_printf(stream, meminfo_size_info_generate_header(header));
     php_stream_printf(stream, ",\n");
 
     php_stream_printf(stream, "\"items\": {\n");
@@ -374,7 +308,7 @@ PHP_FUNCTION(meminfo_size_info)
          * seems to be "regenerated"
          */
         if (frame_symbol_table != NULL) {
-            browse_zvals_from_symbol_table(stream, frame_symbol_table, visited_items, &first_element);
+            meminfo_browse_zvals_from_symbol_table(stream, frame_symbol_table, visited_items, &first_element);
         }
 
         exec_frame = exec_frame->prev_execute_data;
@@ -382,7 +316,7 @@ PHP_FUNCTION(meminfo_size_info)
 
     global_symbol_table = &EG(symbol_table);
 
-    browse_zvals_from_symbol_table(stream, global_symbol_table, visited_items, &first_element);
+    meminfo_browse_zvals_from_symbol_table(stream, global_symbol_table, visited_items, &first_element);
 
     php_stream_printf(stream, "\n    }\n");
     php_stream_printf(stream, "}\n}\n");
@@ -391,7 +325,74 @@ PHP_FUNCTION(meminfo_size_info)
     FREE_HASHTABLE(visited_items);
 }
 
-void browse_zvals_from_symbol_table(php_stream *stream, HashTable *symbol_table, HashTable * visited_items, int *first_element)
+//TODO: use gettype directly ? Possible ?
+char* meminfo_get_type_label(zval* z) {
+    switch (Z_TYPE_P(z)) {
+        case IS_NULL:
+            return "NULL";
+            break;
+
+        case IS_BOOL:
+            return "boolean";
+            break;
+
+        case IS_LONG:
+            return "integer";
+            break;
+
+        case IS_DOUBLE:
+            return "double";
+            break;
+
+        case IS_STRING:
+            return "string";
+            break;
+
+        case IS_ARRAY:
+            return "array";
+            break;
+
+        case IS_OBJECT:
+            return "object";
+            break;
+
+        case IS_RESOURCE:
+            return "resource";
+            break;
+
+        default:
+            return "Unknown type";
+    }
+}
+
+/**
+ * Return the class associated to the provided object handle
+ *
+ * @param zend_object_handle object handle
+ *
+ * @return char * class name
+ */
+const char * meminfo_get_classname(zend_object_handle handle)
+{
+    zend_objects_store *objects = &EG(objects_store);
+    zend_object *object;
+    zend_class_entry *class_entry;
+    const char* class_name;
+
+    class_name = "";
+
+    if (objects->object_buckets[handle].valid) {
+        struct _store_object *obj = &objects->object_buckets[handle].bucket.obj;
+        object =  (zend_object * ) obj->object;
+
+        class_entry = object->ce;
+        class_name = class_entry->name;
+    }
+
+    return class_name;
+}
+
+void meminfo_browse_zvals_from_symbol_table(php_stream *stream, HashTable *symbol_table, HashTable * visited_items, int *first_element)
 {
     zval **zval;
 
@@ -400,13 +401,13 @@ void browse_zvals_from_symbol_table(php_stream *stream, HashTable *symbol_table,
     zend_hash_internal_pointer_reset_ex(symbol_table, &pos);
     while (zend_hash_get_current_data_ex(symbol_table, (void **) &zval, &pos) == SUCCESS) {
 
-        browse_zval_with_size(stream, *zval, visited_items, first_element);
+        meminfo_browse_zval_with_size(stream, *zval, visited_items, first_element);
 
         zend_hash_move_forward_ex(symbol_table, &pos);
     }
 }
 
-int visit_item(const char * item_label, HashTable *visited_items)
+int meminfo_visit_item(const char * item_label, HashTable *visited_items)
 {
     int found = 0;
     int isset = 1;
@@ -421,7 +422,7 @@ int visit_item(const char * item_label, HashTable *visited_items)
     return found;
 }
 
-void browse_hash_with_size(php_stream *stream, HashTable *ht, zend_bool is_object, HashTable *visited_items, int *first_element)
+void meminfo_browse_hash_with_size(php_stream *stream, HashTable *ht, zend_bool is_object, HashTable *visited_items, int *first_element)
 {
     zval **zval;
     char *key;
@@ -453,7 +454,7 @@ void browse_hash_with_size(php_stream *stream, HashTable *ht, zend_bool is_objec
 
                     strcpy(key, property_name);
                 }
-                php_stream_printf(stream, "            \"%s\":\"%p\"", escape_for_json(key), *zval );
+                php_stream_printf(stream, "            \"%s\":\"%p\"", meminfo_escape_for_json(key), *zval );
                 break;
             case HASH_KEY_IS_LONG:
                 php_stream_printf(stream, "            \"%ld\":\"%p\"", num_key, *zval );
@@ -466,17 +467,17 @@ void browse_hash_with_size(php_stream *stream, HashTable *ht, zend_bool is_objec
 
     zend_hash_internal_pointer_reset_ex(ht, &pos);
     while (zend_hash_get_current_data_ex(ht, (void **) &zval, &pos) == SUCCESS) {
-        browse_zval_with_size(stream, *zval, visited_items, first_element);
+        meminfo_browse_zval_with_size(stream, *zval, visited_items, first_element);
         zend_hash_move_forward_ex(ht, &pos);
     }
 }
 
-void browse_zval_with_size(php_stream * stream, zval * zv, HashTable *visited_items, int *first_element)
+void meminfo_browse_zval_with_size(php_stream * stream, zval * zv, HashTable *visited_items, int *first_element)
 {
     char zval_id[16];
     sprintf(zval_id, "%p", zv);
 
-    if (visit_item(zval_id, visited_items)) {
+    if (meminfo_visit_item(zval_id, visited_items)) {
         return;
     }
 
@@ -487,8 +488,8 @@ void browse_zval_with_size(php_stream * stream, zval * zv, HashTable *visited_it
     }
 
     php_stream_printf(stream, "    \"%s\" : {\n", zval_id);
-    php_stream_printf(stream, "        \"type\" : \"%s\",\n", get_type_label(zv));
-    php_stream_printf(stream, "        \"size\" : \"%ld\"", get_element_size(zv));
+    php_stream_printf(stream, "        \"type\" : \"%s\",\n", meminfo_get_type_label(zv));
+    php_stream_printf(stream, "        \"size\" : \"%ld\"", meminfo_get_element_size(zv));
 
     if (Z_TYPE_P(zv) == IS_OBJECT) {
         HashTable *properties;
@@ -498,12 +499,12 @@ void browse_zval_with_size(php_stream * stream, zval * zv, HashTable *visited_it
         int is_temp;
 
         php_stream_printf(stream, ",\n");
-        php_stream_printf(stream, "        \"class\" : \"%s\",\n", escape_for_json(get_classname(zv->value.obj.handle)));
+        php_stream_printf(stream, "        \"class\" : \"%s\",\n", meminfo_escape_for_json(meminfo_get_classname(zv->value.obj.handle)));
 
         properties = Z_OBJDEBUG_P(zv, is_temp);
 
         if (properties != NULL) {
-            browse_hash_with_size(stream, properties, 1, visited_items, first_element);
+            meminfo_browse_hash_with_size(stream, properties, 1, visited_items, first_element);
 
             if (is_temp) {
                 zend_hash_destroy(properties);
@@ -512,7 +513,7 @@ void browse_zval_with_size(php_stream * stream, zval * zv, HashTable *visited_it
         }
     } else if (Z_TYPE_P(zv) == IS_ARRAY) {
         php_stream_printf(stream, ",\n");
-        browse_hash_with_size(stream, zv->value.ht, 0, visited_items, first_element);
+        meminfo_browse_hash_with_size(stream, zv->value.ht, 0, visited_items, first_element);
     } else {
         php_stream_printf(stream, "\n");
     }
@@ -525,7 +526,7 @@ void browse_zval_with_size(php_stream * stream, zval * zv, HashTable *visited_it
  *
  * @return zend_ulong
  */
-zend_ulong get_element_size(zval *zv)
+zend_ulong meminfo_get_element_size(zval *zv)
 {
     zend_ulong size;
 
@@ -551,7 +552,7 @@ zend_ulong get_element_size(zval *zv)
 /**
  * Escape the \ and " characters for JSON encoding
  */
-char * escape_for_json(const char *s)
+char * meminfo_escape_for_json(const char *s)
 {
     int new_str_len;
     char *s1;
@@ -565,7 +566,7 @@ char * escape_for_json(const char *s)
  * Generate a JSON header for the meminfo
  *
  */
-char * size_info_generate_header(char * header)
+char * meminfo_size_info_generate_header(char * header)
 {
     size_t memory_usage;
     size_t memory_usage_real;

@@ -16,12 +16,17 @@ PHP_FUNCTION(meminfo_size_info);
 
 static int instances_count_compare(const void *a, const void *b TSRMLS_DC);
 
-zend_ulong get_element_size(zval* z);
-void browse_zval_with_size(php_stream * stream, zval * zv, HashTable *visited_items, int *first_element);
-void browse_hash_with_size(php_stream *stream, HashTable *ht, zend_bool is_object, HashTable *visited_items, int *first_element);
-void browse_zvals_from_symbol_table(php_stream *stream, HashTable *symbol_table, HashTable * visited_items, int *first_element);
-char * escape_for_json(const char *s);
-char * size_info_generate_header(char *header);
+const char * meminfo_get_classname(zend_object_handle handle);
+char* meminfo_get_type_label(zval* z);
+zend_ulong meminfo_get_element_size(zval* z);
+
+void meminfo_browse_zval_with_size(php_stream * stream, zval * zv, HashTable *visited_items, int *first_element);
+void meminfo_browse_hash_with_size(php_stream *stream, HashTable *ht, zend_bool is_object, HashTable *visited_items, int *first_element);
+void meminfo_browse_zvals_from_symbol_table(php_stream *stream, HashTable *symbol_table, HashTable * visited_items, int *first_element);
+int meminfo_visit_item(const char * item_label, HashTable *visited_items);
+
+char * meminfo_escape_for_json(const char *s);
+char * meminfo_size_info_generate_header(char *header);
 
 extern zend_module_entry meminfo_entry;
 #define phpext_meminfo_ptr &meminfo_module_entry
