@@ -141,7 +141,7 @@ PHP_FUNCTION(meminfo_objects_summary)
         }
     }
 
-    zend_hash_sort(classes, zend_qsort, instances_count_compare, 0 TSRMLS_CC);
+    zend_hash_sort(classes, zend_qsort, meminfo_instances_count_compare, 0 TSRMLS_CC);
 
     php_stream_from_zval(stream, &zval_stream);
     php_stream_printf(stream, "Instances count by class:\n");
@@ -172,35 +172,6 @@ PHP_FUNCTION(meminfo_objects_summary)
     FREE_HASHTABLE(classes);
 }
 
-static int instances_count_compare(const void *a, const void *b TSRMLS_DC)
-{
-    const Bucket *first_bucket;
-    const Bucket *second_bucket;
-
-    first_bucket = *((const Bucket **) a);
-    second_bucket = *((const Bucket **) b);
-
-    zval *zv_first;
-    zval *zv_second;
-
-    zv_first = (zval *) first_bucket->pDataPtr;
-    zv_second = (zval *) second_bucket->pDataPtr;
-
-
-    zend_uint first;
-    zend_uint second;
-
-    first = Z_LVAL_P(zv_first);
-    second = Z_LVAL_P(zv_second);
-
-    if (first > second) {
-        return -1;
-    } else if (first == second) {
-        return 0;
-    } else {
-        return 1;
-    }
-}
 
 PHP_FUNCTION(meminfo_gc_roots_list)
 {
@@ -227,7 +198,7 @@ PHP_FUNCTION(meminfo_gc_roots_list)
                 meminfo_get_classname(current->handle),
                 current->handle);
         } else {
-            php_stream_printf(stream, "  Type: %s", meminfo_get_type_label(pz));
+            php_stream_printf(stream, "  Type: %s",  zend_get_type_by_const(Z_TYPE_P(pz)));
             php_stream_printf(stream, ", Ref count GC %d\n", pz->refcount__gc);
 
         }
@@ -325,43 +296,38 @@ PHP_FUNCTION(meminfo_size_info)
     FREE_HASHTABLE(visited_items);
 }
 
-//TODO: use gettype directly ? Possible ?
-char* meminfo_get_type_label(zval* z) {
-    switch (Z_TYPE_P(z)) {
-        case IS_NULL:
-            return "NULL";
-            break;
+/**
+   Compare two buckets (usually fcoming from a hashtable) by extracting their
+   int value and return the comparision result.
 
-        case IS_BOOL:
-            return "boolean";
-            break;
+   Used to sort a hashtable by value
+*/
+static int meminfo_instances_count_compare(const void *a, const void *b TSRMLS_DC)
+{
+    const Bucket *first_bucket;
+    const Bucket *second_bucket;
 
-        case IS_LONG:
-            return "integer";
-            break;
+    first_bucket = *((const Bucket **) a);
+    second_bucket = *((const Bucket **) b);
 
-        case IS_DOUBLE:
-            return "double";
-            break;
+    zval *zv_first;
+    zval *zv_second;
 
-        case IS_STRING:
-            return "string";
-            break;
+    zv_first = (zval *) first_bucket->pDataPtr;
+    zv_second = (zval *) second_bucket->pDataPtr;
 
-        case IS_ARRAY:
-            return "array";
-            break;
+    zend_uint first;
+    zend_uint second;
 
-        case IS_OBJECT:
-            return "object";
-            break;
+    first = Z_LVAL_P(zv_first);
+    second = Z_LVAL_P(zv_second);
 
-        case IS_RESOURCE:
-            return "resource";
-            break;
-
-        default:
-            return "Unknown type";
+    if (first > second) {
+        return -1;
+    } else if (first == second) {
+        return 0;
+    } else {
+        return 1;
     }
 }
 
@@ -488,7 +454,7 @@ void meminfo_browse_zval_with_size(php_stream * stream, zval * zv, HashTable *vi
     }
 
     php_stream_printf(stream, "    \"%s\" : {\n", zval_id);
-    php_stream_printf(stream, "        \"type\" : \"%s\",\n", meminfo_get_type_label(zv));
+    php_stream_printf(stream, "        \"type\" : \"%s\",\n", zend_get_type_by_const(Z_TYPE_P(zv)));
     php_stream_printf(stream, "        \"size\" : \"%ld\"", meminfo_get_element_size(zv));
 
     if (Z_TYPE_P(zv) == IS_OBJECT) {
@@ -572,7 +538,6 @@ char * meminfo_size_info_generate_header(char * header)
     size_t memory_usage_real;
     size_t peak_memory_usage;
     size_t peak_memory_usage_real;
-    size_t class_memory_usage;
 
     memory_usage = zend_memory_usage(0);
     memory_usage_real = zend_memory_usage(1);
@@ -583,7 +548,12 @@ char * meminfo_size_info_generate_header(char * header)
     snprintf(
         header,
         1024,
-        "{ \"memory_usage\":%d,\n\"memory_usage_real\":%d,\n\"peak_memory_usage\":%d\n, \"peak_memory_usage_real\":%d\n}",
+        "{\n\
+            \"memory_usage\":%d,\n\
+            \"memory_usage_real\":%d,\n\
+            \"peak_memory_usage\":%d,\n\
+            \"peak_memory_usage_real\":%d\n\
+        }",
         memory_usage,
         memory_usage_real,
         peak_memory_usage,
