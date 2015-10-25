@@ -41,5 +41,8 @@ modules
 run-tests.php
 include
 
+# PHP tests
+/tmp-php.ini
+
 # Vim
 *.swp
