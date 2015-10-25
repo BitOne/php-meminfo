@@ -1,8 +1,8 @@
 MEMINFO
 =======
-PHP Meminfo is a very simple PHP extension that gives you insight on the current content of the memory in PHP.
+PHP Meminfo is a PHP extension that gives you insights on the PHP memory content.
 
-It's main goal is to understand memory leaks, but can be useful as well to get information on the behaviour of your application by looking at what data it produces in memory.
+Its main goal is to help you understand memory leaks, but by looking at data present in memory, you can better understand your application behaviour.
 
 One of the main source of inspiration for this tool is the Java jmap tool with the -histo option (see `man jmap`).
 
@@ -16,105 +16,44 @@ Compiled and tested on:
 
 Compilation instructions
 ------------------------
-MemInfo can be compiled outside PHP itself.
-
-You will need the phpize command. It can be installed on a Debian based system by:
-apt-get install php5-dev
+You will need the `phpize` command. It can be installed on a Debian based system by:
+```bash
+$ apt-get install php5-dev
+```
 
 Once you have this command, follow this steps:
 
 ## Compilation
 From the root of the extension directory:
 
-    phpize
-    ./configure --enable-meminfo
-    make
-    make install
+```bash
+$ phpize
+$ ./configure --enable-meminfo
+$ make
+$ make install
+```
 
 ## Enabling the extension
-Add the following line to your php.ini or to a custom file inside /etc/php5/conf.d/ for Debian based system.
-    `extension=meminfo.so`
+Add the following line to your `php.ini`:
 
-Restart your webserver.
-
-Check the PHP Info output and look for the MemInfo data. If you can find it, installation has been successful.
-
-To see the PHP Info output, just create a page calling the phpinfo(); function, and load it from your browser, or call php -i from command line.
+```ini
+extension=meminfo.so
+```
 
 Usage
 -----
-All meminfo functions take a stream handle as a parameter. It allows you to specify a file (if needed with a variable name identifying your context), as well as to use standard output with the `php://stdout` stream.
+All meminfo functions take a stream handle as a parameter. It allows you to specify a file, as well as to use standard output with the `php://stdout` stream.
 
 ## Exploring Memory usage
-The provided user interface allows you to explore the content of your memory. It will show you the items instanciated, the dependencies between item and the size of each of them.
-
-### Dependencies
-The dependencies are defined in term of parent/child relationships. Relationships can only be carried by arrays and objects.
-When an object has an attribute (or a value in case of array)  pointing to another item, this object or array is considered as
-a parent of the item.
-
-### How memory size is computed
-
-In this interface, you will find two memory size informations: *self size* and *full size*.
-
-#### Self size
-This information is the size of the item itself, not including the size of objects linked.
-
-#### Full size
-The full size is the sum of the sizes of all descendants of the objects.
-
-#### How multi-links are accounted in memory size
-Look at the following code:
-
-```php
-    $parentObject1 = new SplObject();
-    $parentObject2 = new SplObject();
-
-    $childObject = new SplObject();
-
-    $parentObject1->objectA = $childObject;
-
-    $parentObject2->objectA = $childObject;
-```
-
-When suming the full size of `$parentObject1` and `$parentObject2,
-the naive way would be to sum the size of all descendants.
-But this would mean accounting`$childObject`twice.
-
-So for each item, we flag it as *accounted* the first time we take it
-into account when computing a full size object, and *non-accounted* the
-following times. And as an *non-accounted* itme, it's not included in the
-full-size of the object, thus avoiding counted objects twice.
-
-For the previous code example, the final result would be:
-  - parentObject1
-    - size: (self size of parentObject1 + self size of childObject)
-    - accounted children:
-      - childObject
-    - non-accounted children:
-      - *empty*
-  - parentObject2
-    - size: (self size of parentObject2)
-    - accounted children:
-      - *empty*
-    - non-accounted children:
-      - childObject
-
-##### Warning
-"When" a child is accounted can be quite random, as the program cannot know
-how what is the more "meaningful" relationship that should account the child
-instead of a less "meaningful" relationship.
-
-More sophisticated strategy could be implemented in the future to produce a
-more expected result.
+The provided user interface allows you to explore the content of your memory. It will show you the items instanciated, the dependencies between items and the size of each of them.
 
 ### Summary Screen
 The main screen lists the top memory consumers, ordered by their total size.
-[image of doc/images/ui_summary.pnh]
+![summary screen](doc/images/ui_summary.png)
 
 ### Item details Screen
 Clicking on an item brings you to the Item Details Screen.
-[image of doc/images/ui_summary.pnh]
+![summary screen](doc/images/ui_item_details.png)
 
 On this screen, you will see 5 parts:
  - title
@@ -124,12 +63,8 @@ This memory address is used as the unique identifier of the item
  - Information
 Small summary on the item itself, like the class name in case of object and memory size information.
 
-### Limitations
-#### Memory calculations
-The following items are not yet taken into account in memory calculation:
- - classes memory usage
- - array keys memory usage
- - objects attribute name memory usage
+### How memory size is computed
+See [the dedicated documentation](/doc/memory_calculation.md).
 
 ## Object instances count per class
 Display the number of instances per class, ordered descending. Very useful to identify the content of a memory leak.
@@ -157,32 +92,12 @@ The result will provide something similar to the following example (generated at
 Note: It's a good idea to call the `gc_collect_cycles()` function before executing  `meminfo_objects_summary()`, as it will collect dead objects that has not been reclaimed by the ref counter due to circular references. See http://www.php.net/manual/en/features.gc.php for more details.
 
 
-
 ### Examples
 The `examples/` directory at the root of the repository contains more detailed examples.
 ```bash
     $ php examples/objects_summary.php
 ```
 
-## Information on structs size
-Display size in byte of main data structs size in PHP. Will mainly differ between 32bits et 64bits environments.
-
-```php
-
-    meminfo_structs_size(fopen('php://stdout','w'));
-```
-
-It can be useful to understand difference in memory usage between two platforms.
-
-Example Output on 64bits environment:
-
-```
-    Structs size on this platform:
-      Class (zend_class_entry): 568 bytes.
-      Object (zend_object): 32 bytes.
-      Variable (zval): 24 bytes.
-      Variable value (zvalue_value): 16 bytes.
-```
 
 ##List of currently active objects
 Provides a list of live objects with their class and their handle, as well as the total number of active objects and the total number of allocated object buckets.
@@ -207,6 +122,25 @@ The `examples/` directory at the root of the repository contains more detailed e
 
     php examples/objects_list.php
 
+## Information on structs size
+Display size in byte of main data structs size in PHP. Will mainly differ between 32bits et 64bits environments.
+
+```php
+    meminfo_structs_size(fopen('php://stdout','w'));
+```
+
+It can be useful to understand difference in memory usage between two platforms.
+
+Example Output on 64bits environment:
+
+```
+    Structs size on this platform:
+      Class (zend_class_entry): 568 bytes.
+      Object (zend_object): 32 bytes.
+      Variable (zval): 24 bytes.
+      Variable value (zvalue_value): 16 bytes.
+```
+
 Usage in production
 -------------------
 PHP Meminfo can be used in production, as it does not have any impact on performances outside of the call to the `meminfo` functions.
@@ -220,6 +154,16 @@ With the trace feature and the memory delta option (tool see XDebug documentatio
 
  - PHP Memprof (https://github.com/arnaud-lb/php-memory-profiler)
 Provides aggregated data about memory usage by functions. Far less resource intensive than a full trace from XDebug.
+
+Troubleshooting
+---------------
+
+## "Call to undefined function" when calling meminfo_* functions
+It certainly means the extension is not enabled.
+
+Check the PHP Info output and look for the MemInfo data.
+
+To see the PHP Info output, just create a page calling the `phpinfo();` function, and load it from your browser, or call `php -i` from command line.
 
 Credits
 -------
