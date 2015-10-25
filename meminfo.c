@@ -113,6 +113,7 @@ PHP_FUNCTION(meminfo_objects_summary)
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zval_stream) == FAILURE) {
         return;
     }
+    php_stream_from_zval(stream, &zval_stream);
 
     ALLOC_HASHTABLE(classes);
 
@@ -124,38 +125,39 @@ PHP_FUNCTION(meminfo_objects_summary)
 
     for (i = 1; i < objects->top ; i++) {
         if (objects->object_buckets[i].valid && !objects->object_buckets[i].destructor_called) {
+
             const char *class_name;
-            zval **zv_dest;
+            zend_uint *p_instances_count;
 
             class_name = meminfo_get_classname(i);
 
-            if (zend_hash_find(classes, class_name, strlen(class_name)+1, (void **) &zv_dest) == SUCCESS) {
-                Z_LVAL_PP(zv_dest) = Z_LVAL_PP(zv_dest) ++;
+            if (zend_hash_find(classes, class_name, strlen(class_name)+1, (void **) &p_instances_count) == SUCCESS) {
+                (*p_instances_count)++;
             } else {
-                zval *zv_instances_count;
-                MAKE_STD_ZVAL(zv_instances_count);
-                ZVAL_LONG(zv_instances_count, 1);
+                zend_uint instances_count;
+                instances_count = 1;
+                p_instances_count = &instances_count;
 
-                zend_hash_update(classes, class_name, strlen(class_name)+1, &zv_instances_count, sizeof(zval *), NULL);
+                zend_hash_update(classes, class_name, strlen(class_name)+1, p_instances_count, sizeof(zend_uint *), NULL);
             }
         }
     }
 
     zend_hash_sort(classes, zend_qsort, meminfo_instances_count_compare, 0 TSRMLS_CC);
 
-    php_stream_from_zval(stream, &zval_stream);
     php_stream_printf(stream, "Instances count by class:\n");
 
-    php_stream_printf(stream, "%-12s %-12s %s\n", "num", "#instances", "class");
+    php_stream_printf(stream, "%-12s %-12s %s\n", "rank", "#instances", "class");
     php_stream_printf(stream, "-----------------------------------------------------------------\n");
 
-    zend_uint num = 1;
+    zend_uint rank = 1;
 
     HashPosition position;
-    zval **entry = NULL;
+
+    zend_uint *p_instances_count;
 
     for (zend_hash_internal_pointer_reset_ex(classes, &position);
-         zend_hash_get_current_data_ex(classes, (void **) &entry, &position) == SUCCESS;
+         zend_hash_get_current_data_ex(classes, (void **) &p_instances_count, &position) == SUCCESS;
          zend_hash_move_forward_ex(classes, &position)) {
 
         char *class_name = NULL;
@@ -163,9 +165,9 @@ PHP_FUNCTION(meminfo_objects_summary)
         ulong index;
 
         zend_hash_get_current_key_ex(classes, &class_name, &class_name_len, &index, 0, &position);
-        php_stream_printf(stream, "%-12d %-12d %s\n", num, Z_LVAL_PP(entry), class_name);
+        php_stream_printf(stream, "%-12d %-12d %s\n", rank, *p_instances_count, class_name);
 
-        num++;
+        rank++;
     }
 
     zend_hash_destroy(classes);
@@ -297,34 +299,26 @@ PHP_FUNCTION(meminfo_size_info)
 }
 
 /**
-   Compare two buckets (usually fcoming from a hashtable) by extracting their
+   Compare two hashtable buckets  by extracting their
    int value and return the comparision result.
-
-   Used to sort a hashtable by value
 */
 static int meminfo_instances_count_compare(const void *a, const void *b TSRMLS_DC)
 {
-    const Bucket *first_bucket;
-    const Bucket *second_bucket;
+    const Bucket *bucket_a;
+    const Bucket *bucket_b;
 
-    first_bucket = *((const Bucket **) a);
-    second_bucket = *((const Bucket **) b);
+    bucket_a = *((const Bucket **) a);
+    bucket_b = *((const Bucket **) b);
 
-    zval *zv_first;
-    zval *zv_second;
+    zend_uint instances_count_a;
+    zend_uint instances_count_b;
 
-    zv_first = (zval *) first_bucket->pDataPtr;
-    zv_second = (zval *) second_bucket->pDataPtr;
+    instances_count_a = (zend_uint) bucket_a->pDataPtr;
+    instances_count_b = (zend_uint) bucket_b->pDataPtr;
 
-    zend_uint first;
-    zend_uint second;
-
-    first = Z_LVAL_P(zv_first);
-    second = Z_LVAL_P(zv_second);
-
-    if (first > second) {
+    if (instances_count_a > instances_count_b) {
         return -1;
-    } else if (first == second) {
+    } else if (instances_count_a == instances_count_b) {
         return 0;
     } else {
         return 1;
