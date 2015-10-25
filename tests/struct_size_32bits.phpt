@@ -1,5 +1,7 @@
 --TEST--
-Check meminfo_struct_size output (FIXME: valid in 64bits env only)
+meminfo_struct_size in 32 bits
+--SKIPIF--
+<?php if (php_uname('m') != 'i386') echo "skip i386 arch needed\n"; ?>
 --FILE--
 <?php
     meminfo_structs_size(fopen('php://stdout', 'w'));
