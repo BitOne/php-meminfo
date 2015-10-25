@@ -4,6 +4,6 @@ meminfo_objects_list with no objects
 <?php
     meminfo_objects_list(fopen('php://stdout', 'w'));
 ?>
---EXPECTF--
+--EXPECT--
 Objects list:
 Total object buckets: 0. Current objects: 0.

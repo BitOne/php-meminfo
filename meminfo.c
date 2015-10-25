@@ -227,18 +227,8 @@ PHP_FUNCTION(meminfo_symbol_table)
 }
 
 /**
- * Generate an output to the provided stream with the following format:
- *   {
- *       "element1_id" : {
- *           "type:" "object",
- *           "size" : 10,
- *           "children"  : [
- *               "property1" : "children1_id",
- *               "property2" : "children2_id"
- *           ]
- *       },
- *      "element2_id" : ...
- *   }
+ * Generate a JSON output of the list of items in memory (objects, arrays, string, etc...)
+ * with their sizes
  */
 PHP_FUNCTION(meminfo_size_info)
 {

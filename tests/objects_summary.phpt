@@ -20,7 +20,7 @@ meminfo_objects_summary with no objects
 
     meminfo_objects_summary(fopen('php://stdout', 'w'));
 ?>
---EXPECTF--
+--EXPECT--
 Instances count by class:
 rank         #instances   class
 -----------------------------------------------------------------

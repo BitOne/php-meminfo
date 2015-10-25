@@ -10,7 +10,7 @@ meminfo_objects_list with some objects
 
     meminfo_objects_list(fopen('php://stdout', 'w'));
 ?>
---EXPECTF--
+--EXPECT--
 Objects list:
   - Class A, handle 1, refCount 1
   - Class B, handle 2, refCount 1

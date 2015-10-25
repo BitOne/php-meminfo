@@ -12,7 +12,7 @@ meminfo_objects_list with a deleted object
 
     meminfo_objects_list(fopen('php://stdout', 'w'));
 ?>
---EXPECTF--
+--EXPECT--
 Objects list:
   - Class B, handle 2, refCount 1
 Total object buckets: 2. Current objects: 1.

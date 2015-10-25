@@ -6,7 +6,7 @@ meminfo_struct_size in 64 bits
 <?php
     meminfo_structs_size(fopen('php://stdout', 'w'));
 ?>
---EXPECTF--
+--EXPECT--
 Simple Zend Type size on this platform
   Zend Unsigned Int (zend_uint): 4 bytes.
   Zend Unsigned Char (zend_uchar): 1 bytes.
