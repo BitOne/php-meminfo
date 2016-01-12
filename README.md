@@ -115,7 +115,7 @@ For example:
       - Class MyClassC, handle 7, refcount 1
     Total object buckets: 7. Current objects: 4.
 
-Note: The same remark about `gc_collect_cycle()` before `meminfo_objects_summary()` applies as well for this function.
+Note: The same remark about `gc_collect_cycles()` before `meminfo_objects_summary()` applies as well for this function.
 
 ### Examples
 The `examples/` directory at the root of the repository contains more detailed examples.
