@@ -99,6 +99,39 @@ The `examples/` directory at the root of the repository contains more detailed e
 ```
 
 
+## List of items in memory
+Provides a list of items in memory (objects, arrays, string, etc.) with their sizes.
+
+```php
+    meminfo_size_info(fopen('php://stdout','w'));
+```
+
+For example:
+```json
+// ...
+    "0x7fe06ea50a40" : {
+        "type" : "array",
+        "size" : "96",
+        "children" : {
+            "0":"0x7fe06ea649b0"
+        }
+
+    },
+    "0x7fe06ea649b0" : {
+        "type" : "string",
+        "size" : "99"
+
+    },
+//...
+```
+
+Note: The same remark about `gc_collect_cycles()` before `meminfo_objects_summary()` applies as well for this function.
+
+### Examples
+The `examples/` directory at the root of the repository contains more detailed examples.
+
+    php examples/size_info.php
+
 ##List of currently active objects
 Provides a list of live objects with their class and their handle, as well as the total number of active objects and the total number of allocated object buckets.
 
