@@ -465,7 +465,17 @@ void meminfo_browse_zval_with_size(php_stream * stream, zval * zv, HashTable *vi
         php_stream_printf(stream TSRMLS_CC, ",\n");
         meminfo_browse_hash_with_size(stream, zv->value.ht, 0, visited_items, first_element);
     } else {
-        php_stream_printf(stream TSRMLS_CC, "\n");
+        if (Z_TYPE_P(zv) == IS_STRING) {
+            php_stream_printf(stream TSRMLS_CC, ",\n        \"value\" : \"%.50s\"\n", meminfo_escape_for_json(zv->value.str.val));
+        } else if (Z_TYPE_P(zv) == IS_BOOL) {
+            php_stream_printf(stream TSRMLS_CC, ",\n        \"value\" : \"%s\"\n", zv->value.lval ? "true" : "false");
+        } else if (Z_TYPE_P(zv) == IS_LONG) {
+            php_stream_printf(stream TSRMLS_CC, ",\n        \"value\" : \"%ld\"\n", zv->value.lval);
+        } else if (Z_TYPE_P(zv) == IS_DOUBLE) {
+            php_stream_printf(stream TSRMLS_CC, ",\n        \"value\" : \"%f\"\n", zv->value.dval);
+        } else {
+            php_stream_printf(stream TSRMLS_CC, "\n");
+        }
     }
 
 }
