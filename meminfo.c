@@ -265,7 +265,6 @@ PHP_FUNCTION(meminfo_size_info)
     while (exec_frame) {
         frame_symbol_table = exec_frame->symbol_table;
 
-
         /* TODO Check why it is NULL sometimes
          * See some example where the symbol table
          * seems to be "regenerated"
@@ -450,6 +449,7 @@ void meminfo_browse_zval_with_size(php_stream * stream, zval * zv, HashTable *vi
 
         php_stream_printf(stream TSRMLS_CC, ",\n");
         php_stream_printf(stream TSRMLS_CC, "        \"class\" : \"%s\",\n", meminfo_escape_for_json(meminfo_get_classname(zv->value.obj.handle)));
+        php_stream_printf(stream TSRMLS_CC, "        \"object_handle\" : \"%d\",\n", zv->value.obj.handle);
 
         properties = Z_OBJDEBUG_P(zv, is_temp);
 

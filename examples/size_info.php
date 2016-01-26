@@ -7,6 +7,10 @@
     $myObject->myDouble = $myDouble;
     $myObject->myString = $myString;
 
+    $myObject2 = new StdClass();
+
+    $myObjectRef = $myObject;
+
     $myArray = [];
     $myArray[] = "TEST";
     $myArray[] = $myDouble;

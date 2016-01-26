@@ -1,3 +1,6 @@
+2016-01-26 Benoit Jacquemont <benoit.jacquemont@gmail.com>
+* Added the object handle to uniquely identify objects
+
 2014-02-15 Benoit Jacquemont <benoit.jacquemont@gmail.com>
 * Cleanup and release of v0.1.0
 
