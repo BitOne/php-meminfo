@@ -465,7 +465,7 @@ void meminfo_browse_zval_with_size(php_stream * stream, zval * zv, HashTable *vi
         php_stream_printf(stream TSRMLS_CC, ",\n");
         meminfo_browse_hash_with_size(stream, zv->value.ht, 0, visited_items, first_element);
     } else {
-        php_stream_printf(stream TSRMLS_CC, "\n");
+        php_stream_printf(stream TSRMLS_CC, "        \"value\" : \"%s\"\n", meminfo_escape_for_json(zv->value));
     }
 
 }
