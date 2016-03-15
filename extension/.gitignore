@@ -43,6 +43,3 @@ include
 
 # PHP tests
 /tmp-php.ini
-
-# Vim
-*.swp

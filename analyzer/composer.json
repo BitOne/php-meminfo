@@ -1,0 +1,21 @@
+{
+    "name": "bitone/php-meminfo-analyzer",
+    "license": "MIT",
+    "type": "project",
+    "description": "Tools to analyze meminfo dump files",
+    "require": {
+        "symfony/console" : "^2.8.3",
+        "symfony/filesystem" : "^2.8.3",
+        "symfony/serializer" : "^2.8.3",
+        "clue/graph": "^0.9.0",
+        "graphp/algorithms": "^0.8.1"
+    },
+    "autoload": {
+        "psr-4": { "": "src/" }
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^2.5",
+        "phpspec/phpspec": "^2.4",
+        "fabpot/php-cs-fixer": "^1.11"
+    }
+}
