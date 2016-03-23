@@ -98,6 +98,11 @@ This feature allow to dump the list of items present in memory at the time of th
  - execution frame (name of the method where the variable has been declared)
  - children: list of linked items with the key value if array or property name if object and the item address in memory
 
+### Dumping memory info
+```php
+meminfo_info_dump(fopen('/tmp/my_dump_file.json', 'w'));
+```
+
 ### Analyzing a memory dump
 The analyzer is available from the `analyzer/` directory. It will be invoked with:
 ``` bash
