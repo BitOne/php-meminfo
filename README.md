@@ -2,7 +2,7 @@ MEMINFO
 =======
 PHP Meminfo is a PHP extension that gives you insights on the PHP memory content.
 
-Its main goal is to help you understand memory leaks, but by looking at data present in memory, you can better understand your application behaviour.
+Its main goal is to help you understand memory leaks: by looking at data present in memory, you can better understand your application behaviour.
 
 One of the main source of inspiration for this tool is the Java jmap tool with the -histo option (see `man jmap`).
 
@@ -13,6 +13,7 @@ Compiled and tested on:
  - PHP 5.4.4 (Debian 7)
  - PHP 5.5.8 (Ubuntu 12.04 LTS)
  - PHP 5.5.20 (CentOS 7)
+ - PHP 5.6.17 (Debian 8)
 
 Compilation instructions
 ------------------------
@@ -24,7 +25,7 @@ $ apt-get install php5-dev
 Once you have this command, follow this steps:
 
 ## Compilation
-From the root of the extension directory:
+From the root of the `extension/` directory:
 
 ```bash
 $ phpize
@@ -40,31 +41,18 @@ Add the following line to your `php.ini`:
 extension=meminfo.so
 ```
 
+Installing analyzers
+--------------------
+Analyzers allow to analyze a memory dump (see below).
+
+```bash
+$ cd analyzers
+$ composer update
+```
+
 Usage
 -----
-All meminfo functions take a stream handle as a parameter. It allows you to specify a file, as well as to use standard output with the `php://stdout` stream.
-
-## Exploring Memory usage
-The provided user interface allows you to explore the content of your memory. It will show you the items instanciated, the dependencies between items and the size of each of them.
-
-### Summary Screen
-The main screen lists the top memory consumers, ordered by their total size.
-![summary screen](doc/images/ui_summary.png)
-
-### Item details Screen
-Clicking on an item brings you to the Item Details Screen.
-![summary screen](doc/images/ui_item_details.png)
-
-On this screen, you will see 5 parts:
- - title
-Item type (object, array, string, boolean, etc...) and its pointer address in memory at the time of the data extraction.
-This memory address is used as the unique identifier of the item
-
- - Information
-Small summary on the item itself, like the class name in case of object and memory size information.
-
-### How memory size is computed
-See [the dedicated documentation](/doc/memory_calculation.md).
+All meminfo functions take a stream handle as a parameter. It allows you to specify a file (ex `fopen('/tmp/file.txt', 'w')`, as well as to use standard output with the `php://stdout` stream.
 
 ## Object instances count per class
 Display the number of instances per class, ordered descending. Very useful to identify the content of a memory leak.
@@ -73,7 +61,7 @@ Display the number of instances per class, ordered descending. Very useful to id
     meminfo_objects_summary(fopen('php://stdout','w'));
 ```
 
-The result will provide something similar to the following example (generated at the end of the Symfony2 console launch)
+The result will provide something similar to the following example generated at the end of a Symfony2 console launch:
 
 ```
     Instances count by class:
@@ -98,6 +86,49 @@ The `examples/` directory at the root of the repository contains more detailed e
     $ php examples/objects_summary.php
 ```
 
+## Memory state dump
+This feature allow to dump the list of items present in memory at the time of the function execution. Each memory items (string, boolean, objects, array, etc...) are dumped in a JSON format, with the following information:
+ - in memory address
+ - type (object, array, int, string, ...)
+ - class (only for objects)
+ - object handle (only for objects.
+ - self size (without the size of the linked objects)
+ - is_root (tells if the item is directly linked to a variable)
+ - symbol name (variable name, if linked to a variable)
+ - execution frame (name of the method where the variable has been declared)
+ - children: list of linked items with the key value if array or property name if object and the item address in memory
+
+### Analyzing a memory dump
+The analyzer is available from the `analyzer/` directory. It will be invoked with:
+``` bash
+$ bin/analyzer
+```
+
+#### Querying a memory dump
+The `query` command on the analyzer allows you to filter out some items from a memory dump. The `-f` option can be used several times, effectively *anding* the filters. The supported operators are exact match `=` and regexp match `~`.
+
+The `-v`option display all the information of the items found.
+
+##### Examples
+ - finding array that are not directly linked to a variable
+```bash
+$ bin/analyzer query -f "type=array" -f "is_root=0" my_dump_file.json
+```
+ - finding objects whose class name contains `Product` and linked to a variable
+```bash
+$ bin/analyzer query -f "class~Product" -f "is_root=1" -v my_dump_file.json
+```
+
+#### Finding out why an object has not been removed from memory
+When you are tracking down a memory leak, it's very interesting to understand why an object is still in memory.
+
+The analyzer provides the `ref-path` command that load the memory dump as a graph in memory and findout all paths linking an item to a root (a variable define in an execution frame).
+
+Without the `-v` option, the output will contains only item memory adress and key/property name. Adding the `-v` option will display all the information of the linked items.
+
+```bash
+$ bin/analyzer ref-path my_dump_file.json 0x12345678
+```
 
 ## List of items in memory
 Provides a list of items in memory (objects, arrays, string, etc.) with their sizes.

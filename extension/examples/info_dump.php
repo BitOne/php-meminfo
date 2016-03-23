@@ -1,5 +1,22 @@
 <?php
 
+    function testObject($myObject)
+    {
+        $varInsideTestObject = "My super var";
+        $anotherVarInsideFunction  = 42;
+
+        secondFunction();
+    }
+
+    function secondFunction()
+    {
+        $in2ndFunction1 = "test1";
+        $in2ndFunction2 = "test2";
+        $arrayIn2Function = ['Test de array', 1, 2, 3];
+        meminfo_info_dump(fopen('php://stdout', 'w'));
+
+    }
+
     $myDouble = 0.1;
     $myString = "My really nice string 39 characters long";
 
@@ -24,4 +41,4 @@
 
     $myHash2 = [];
 
-    meminfo_size_info(fopen('php://stdout', 'w'));
+    testObject($myObject);
