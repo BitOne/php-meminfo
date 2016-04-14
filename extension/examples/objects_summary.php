@@ -21,7 +21,7 @@ for ($i = 0; $i < 5; $i++) {
     $objectsC[] = new MyClassC();
 }
 
-echo "\n* Objects summary after instanciating 10 objects C\n";
+echo "\n* Objects summary after instanciating 5 objects C\n";
 meminfo_objects_summary(fopen('php://stdout', 'w'));
 
 unset($objectA);
