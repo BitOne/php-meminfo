@@ -25,8 +25,6 @@ void meminfo_browse_zvals_from_symbol_table(php_stream *stream, char * frame_lab
 void meminfo_browse_zvals_from_op_array(php_stream *stream, char * frame_label, zend_op_array *op_array, zend_execute_data *exec_frame, HashTable * visited_items, int *first_element);
 int  meminfo_visit_item(const char * item_label, HashTable *visited_items);
 
-char * meminfo_escape_for_json(const char *s);
-char * meminfo_info_dump_header(char *header, int header_len);
 void meminfo_build_frame_label(char * frame_label, int frame_label_len, zend_execute_data* frame);
 
 size_t meminfo_get_class_memory_usage();
