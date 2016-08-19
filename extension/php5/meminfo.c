@@ -48,6 +48,15 @@ zend_module_entry meminfo_module_entry = {
 ZEND_GET_MODULE(meminfo)
 #endif
 
+php_stream * get_php_stream_from_zval(zval *zval_stream)
+{
+    php_stream *stream;
+
+    stream = php_stream_from_zval_no_verify(stream, &zval_stream);
+
+    return stream;
+}
+
 PHP_FUNCTION(meminfo_structs_size)
 {
     zval *zval_stream;
