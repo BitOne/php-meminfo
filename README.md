@@ -237,3 +237,7 @@ To see the PHP Info output, just create a page calling the `phpinfo();` function
 Credits
 -------
 Thanks to Derick Rethans on his inspirational work on the essential XDebug. See http://www.xdebug.org/
+
+Video presentation (in French)
+------------------------------
+https://www.youtube.com/watch?v=wZjnj1PAJ78
