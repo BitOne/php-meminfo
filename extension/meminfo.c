@@ -380,7 +380,7 @@ int meminfo_visit_item(const char * item_label, HashTable *visited_items)
 void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, HashTable *visited_items, int *first_element)
 {
     zval **zval;
-    char *key;
+    char *key, *char_buf;;
 
     HashPosition pos;
     ulong num_key;
@@ -406,10 +406,13 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
                 if (is_object) {
                     const char *property_name, *class_name;
                     int mangled = zend_unmangle_property_name(key, key_len - 1, &class_name, &property_name);
-
-                    php_stream_printf(stream TSRMLS_CC, "            \"%s\":\"%p\"", meminfo_escape_for_json(property_name), *zval );
+                    char_buf = meminfo_escape_for_json(property_name);
+                    php_stream_printf(stream TSRMLS_CC, "            \"%s\":\"%p\"", char_buf, *zval );
+                    efree(char_buf);
                 } else {
-                    php_stream_printf(stream TSRMLS_CC, "            \"%s\":\"%p\"", meminfo_escape_for_json(key), *zval );
+                    char_buf = meminfo_escape_for_json(key);
+                    php_stream_printf(stream TSRMLS_CC, "            \"%s\":\"%p\"", char_buf, *zval );
+                    efree(char_buf);
                 }
 
                 break;
@@ -432,6 +435,7 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
 void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_name, zval * zv, HashTable *visited_items, int *first_element)
 {
     char zval_id[16];
+    char *char_buf;
     sprintf(zval_id, "%p", zv);
 
     if (meminfo_visit_item(zval_id, visited_items)) {
@@ -450,10 +454,14 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_na
 
     if (frame_label) {
         if (symbol_name) {
-            php_stream_printf(stream TSRMLS_CC, "        \"symbol_name\" : \"%s\",\n", meminfo_escape_for_json(symbol_name));
+            char_buf = meminfo_escape_for_json(symbol_name);
+            php_stream_printf(stream TSRMLS_CC, "        \"symbol_name\" : \"%s\",\n", char_buf);
+            efree(char_buf);
         }
         php_stream_printf(stream TSRMLS_CC, "        \"is_root\" : true,\n");
-        php_stream_printf(stream TSRMLS_CC, "        \"frame\" : \"%s\"\n", meminfo_escape_for_json(frame_label));
+        char_buf = meminfo_escape_for_json(frame_label);
+        php_stream_printf(stream TSRMLS_CC, "        \"frame\" : \"%s\"\n", char_buf);
+        efree(char_buf);
     } else {
         php_stream_printf(stream TSRMLS_CC, "        \"is_root\" : false\n");
     }
@@ -466,7 +474,9 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_na
         int is_temp;
 
         php_stream_printf(stream TSRMLS_CC, ",\n");
-        php_stream_printf(stream TSRMLS_CC, "        \"class\" : \"%s\",\n", meminfo_escape_for_json(meminfo_get_classname(zv->value.obj.handle)));
+        char_buf = meminfo_escape_for_json(meminfo_get_classname(zv->value.obj.handle));
+        php_stream_printf(stream TSRMLS_CC, "        \"class\" : \"%s\",\n", char_buf);
+        efree(char_buf);
         php_stream_printf(stream TSRMLS_CC, "        \"object_handle\" : \"%d\",\n", zv->value.obj.handle);
 
         properties = Z_OBJDEBUG_P(zv, is_temp);
@@ -486,6 +496,7 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_na
         php_stream_printf(stream TSRMLS_CC, "\n");
     }
 }
+
 /**
  * Get size of an element
  *
@@ -522,11 +533,13 @@ zend_ulong meminfo_get_element_size(zval *zv)
 char * meminfo_escape_for_json(const char *s)
 {
     int new_str_len;
-    char *s1;
+    char *s1, *s2;
+    s1 = php_str_to_str((char*)s, strlen(s), "\\", 1, "\\\\", 2, &new_str_len);
+    s2 = php_str_to_str(s1, strlen(s1), "\"", 1, "\\\"", 2, &new_str_len);
 
-    s1 = php_str_to_str(s, strlen(s), "\\", 1, "\\\\", 2, &new_str_len);
+    efree(s1);
 
-    return  php_str_to_str(s1, strlen(s1), "\"", 1, "\\\"", 2, &new_str_len);
+    return s2;
 }
 
 /**
