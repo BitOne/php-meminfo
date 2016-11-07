@@ -7,6 +7,7 @@
 
 #include "ext/standard/info.h"
 #include "ext/standard/php_string.h"
+#include "ext/json/php_json.h"
 
 #include "zend_extensions.h"
 #include "zend_exceptions.h"
@@ -435,6 +436,7 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
 void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_name, zval * zv, HashTable *visited_items, int *first_element)
 {
     char zval_id[16];
+    smart_str buf = {0};
     char *char_buf;
     sprintf(zval_id, "%p", zv);
 
@@ -451,6 +453,12 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_na
     php_stream_printf(stream TSRMLS_CC, "    \"%s\" : {\n", zval_id);
     php_stream_printf(stream TSRMLS_CC, "        \"type\" : \"%s\",\n", zend_get_type_by_const(Z_TYPE_P(zv)));
     php_stream_printf(stream TSRMLS_CC, "        \"size\" : \"%ld\",\n", meminfo_get_element_size(zv));
+
+    php_json_encode(&buf, zv, (int)0);
+    php_stream_printf(stream TSRMLS_CC, "        \"value\" : ");
+    php_stream_write(stream TSRMLS_CC,buf.c,buf.len);
+    php_stream_printf(stream TSRMLS_CC, ",\n");
+    smart_str_free(&buf);
 
     if (frame_label) {
         if (symbol_name) {
