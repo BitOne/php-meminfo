@@ -218,7 +218,7 @@ Nevertheless, production environment is not where you debug ;)
 
 Other memory debugging tools for PHP
 -------------------------------------
- - XDebug (http://www.xdebug.net)
+ - XDebug (https://xdebug.org/)
 With the trace feature and the memory delta option (tool see XDebug documentation), you can trace function memory usage. You can use the provided script to get an aggregated view (TODO link)
 
  - PHP Memprof (https://github.com/arnaud-lb/php-memory-profiler)
