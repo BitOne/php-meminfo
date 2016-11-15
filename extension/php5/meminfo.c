@@ -310,8 +310,8 @@ static int meminfo_instances_count_compare(const void *a, const void *b TSRMLS_D
     zend_uint instances_count_a;
     zend_uint instances_count_b;
 
-    instances_count_a = (zend_uint) bucket_a->pDataPtr;
-    instances_count_b = (zend_uint) bucket_b->pDataPtr;
+    instances_count_a = *((zend_uint *) bucket_a->pData);
+    instances_count_b = *((zend_uint *) bucket_b->pData);
 
     if (instances_count_a > instances_count_b) {
         return -1;
