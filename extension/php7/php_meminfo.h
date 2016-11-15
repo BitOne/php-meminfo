@@ -20,7 +20,6 @@ static int instances_count_compare(const void *a, const void *b TSRMLS_DC);
 //PHP_FUNCTION(meminfo_info_dump);
 //
 //
-//const char * meminfo_get_classname(zend_object_handle handle);
 //zend_ulong   meminfo_get_element_size(zval* z);
 //
 //void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_name, zval * zv, HashTable *visited_items, int *first_element);

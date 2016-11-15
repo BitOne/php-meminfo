@@ -72,6 +72,9 @@ PHP_FUNCTION(meminfo_objects_list)
 {
     zval *zval_stream;
     php_stream *stream;
+    uint32_t total_objects_buckets;
+    uint32_t current_objects = 0;
+    zend_string *class_name;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zval_stream) == FAILURE) {
         return;
@@ -82,20 +85,23 @@ PHP_FUNCTION(meminfo_objects_list)
     php_stream_printf(stream, "Objects list:\n");
 
     zend_objects_store *objects = &EG(objects_store);
-    uint32_t handle;
-    uint32_t total_objects_buckets = objects->top - 1;
-    uint32_t current_objects = 0;
-    zend_object * object;
-    zend_class_entry * class_entry;
+    total_objects_buckets = objects->top - 1;
 
-    for (handle = 1; handle < objects->top ; handle++) {
-       object = objects->object_buckets[handle];
-       if (IS_OBJ_VALID(object)) {
+    if (objects->top > 1) {
+        zend_object **obj_ptr = objects->object_buckets + 1;
+        zend_object **end = objects->object_buckets + objects->top;
 
-           php_stream_printf(stream TSRMLS_CC, "  - Class %s, handle %d, refCount %d\n", meminfo_get_classname(handle), handle, object->refcount);
+        do {
+            zend_object *obj = *obj_ptr;
 
-           current_objects++;
-       }
+            if (IS_OBJ_VALID(obj)) {
+                if (!(GC_FLAGS(obj) & IS_OBJ_DESTRUCTOR_CALLED)) {
+                    php_stream_printf(stream TSRMLS_CC, "  - Class %s, handle %d, refCount %d\n", ZSTR_VAL(obj->ce->name), obj->handle, GC_REFCOUNT(obj));
+                    current_objects++;
+                }
+            }
+            obj_ptr++;
+        } while (obj_ptr != end);
     }
 
     php_stream_printf(stream, "Total object buckets: %d. Current objects: %d.\n", total_objects_buckets, current_objects);
@@ -311,32 +317,6 @@ PHP_FUNCTION(meminfo_objects_list)
 //    }
 //}
 //
-/**
- * Return the class associated to the provided object handle
- *
- * @param uint32_t object handle
- *
- * @return char * class name
- */
-const char * meminfo_get_classname(uint32_t handle)
-{
-    zend_objects_store *objects = &EG(objects_store);
-    zend_object *object;
-    zend_class_entry *class_entry;
-    const char* class_name;
-
-    class_name = "";
-
-    if (objects->object_buckets[handle].valid) {
-        struct _store_object *obj = &objects->object_buckets[handle].bucket.obj;
-        object =  (zend_object * ) obj->object;
-
-        class_entry = object->ce;
-        class_name = class_entry->name;
-    }
-
-    return class_name;
-}
 
 //void meminfo_browse_zvals_from_symbol_table(php_stream *stream, char* frame_label, HashTable *symbol_table, HashTable * visited_items, int *first_element)
 //{
