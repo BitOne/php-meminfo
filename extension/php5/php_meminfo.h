@@ -31,6 +31,8 @@ size_t meminfo_get_class_memory_usage();
 
 static int meminfo_instances_count_compare(const void *a, const void *b TSRMLS_DC);
 
+char * meminfo_escape_for_json(const char *s);
+
 extern zend_module_entry meminfo_entry;
 #define phpext_meminfo_ptr &meminfo_module_entry
 

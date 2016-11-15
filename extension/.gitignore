@@ -39,4 +39,4 @@ run-tests.php
 include
 
 # PHP tests
-/tmp-php.ini
+tmp-php.ini

@@ -622,3 +622,20 @@ void meminfo_build_frame_label(char* frame_label, int frame_label_len, zend_exec
         efree((char*)free_class_name);
     }
 }
+
+/**
+ * Escape the \ and " characters for JSON encoding
+ */
+char * meminfo_escape_for_json(const char *s)
+{
+    int new_str_len;
+    char *s1, *s2;
+    s1 = php_str_to_str((char *) s, strlen(s), "\\", 1, "\\\\", 2, &new_str_len);
+    s2 = php_str_to_str(s1, strlen(s1), "\"", 1, "\\\"", 2, &new_str_len);
+
+    if (s1) {
+        efree(s1);
+    }
+
+    return s2;
+}
