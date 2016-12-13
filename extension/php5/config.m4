@@ -3,5 +3,5 @@ PHP_ARG_ENABLE(meminfo, whether to enable Memory Information support,
 
 if test "$PHP_MEMINFO" = "yes"; then
   AC_DEFINE(HAVE_MEMINFO, 1, [Whether you have Memory Info])
-  PHP_NEW_EXTENSION(meminfo, meminfo.c ../common/meminfo_lib.c, $ext_shared)
+  PHP_NEW_EXTENSION(meminfo, meminfo.c, $ext_shared)
 fi

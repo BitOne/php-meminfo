@@ -14,7 +14,7 @@ PHP_FUNCTION(meminfo_gc_roots_list);
 PHP_FUNCTION(meminfo_symbol_table);
 PHP_FUNCTION(meminfo_info_dump);
 
-static int instances_count_compare(const void *a, const void *b TSRMLS_DC);
+static int meminfo_instances_count_compare(const void *a, const void *b TSRMLS_DC);
 
 const char * meminfo_get_classname(zend_object_handle handle);
 zend_ulong   meminfo_get_element_size(zval* z);
@@ -27,13 +27,10 @@ int  meminfo_visit_item(const char * item_label, HashTable *visited_items);
 
 void meminfo_build_frame_label(char * frame_label, int frame_label_len, zend_execute_data* frame);
 
-size_t meminfo_get_class_memory_usage();
-
-static int meminfo_instances_count_compare(const void *a, const void *b TSRMLS_DC);
-
 char * meminfo_escape_for_json(const char *s);
 
 extern zend_module_entry meminfo_entry;
+char * meminfo_info_dump_header(char * header, int header_len);
 #define phpext_meminfo_ptr &meminfo_module_entry
 
 #endif

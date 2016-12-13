@@ -12,28 +12,30 @@
 PHP_FUNCTION(meminfo_structs_size);
 
 PHP_FUNCTION(meminfo_objects_list);
-static int instances_count_compare(const void *a, const void *b TSRMLS_DC);
+PHP_FUNCTION(meminfo_objects_summary);
 
-//PHP_FUNCTION(meminfo_objects_summary);
+static int meminfo_instances_count_compare(const void *a, const void *b TSRMLS_DC);
+
 //PHP_FUNCTION(meminfo_gc_roots_list);
 //PHP_FUNCTION(meminfo_symbol_table);
-//PHP_FUNCTION(meminfo_info_dump);
+PHP_FUNCTION(meminfo_info_dump);
 //
 //
 //zend_ulong   meminfo_get_element_size(zval* z);
 //
-//void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_name, zval * zv, HashTable *visited_items, int *first_element);
+void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * symbol_name, zval * zv, HashTable *visited_items, int *first_element);
 //void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, HashTable *visited_items, int *first_element);
-//void meminfo_browse_zvals_from_symbol_table(php_stream *stream, char * frame_label, HashTable *symbol_table, HashTable * visited_items, int *first_element);
+void meminfo_browse_zvals_from_symbol_table(php_stream *stream, char * frame_label, HashTable *symbol_table, HashTable * visited_items, int *first_element);
 //void meminfo_browse_zvals_from_op_array(php_stream *stream, char * frame_label, zend_op_array *op_array, zend_execute_data *exec_frame, HashTable * visited_items, int *first_element);
-//int  meminfo_visit_item(const char * item_label, HashTable *visited_items);
+int meminfo_visit_item(char *item_label, HashTable *visited_items);
 //
-//void meminfo_build_frame_label(char * frame_label, int frame_label_len, zend_execute_data* frame);
+void meminfo_build_frame_label(char * frame_label, int frame_label_len, zend_execute_data* frame);
 //
 //size_t meminfo_get_class_memory_usage();
-//
-//static int meminfo_instances_count_compare(const void *a, const void *b TSRMLS_DC);
-//
-//extern zend_module_entry meminfo_entry;
+
+char * meminfo_escape_for_json(const char *s);
+char * meminfo_info_dump_header(char * header, int header_len);
+
+extern zend_module_entry meminfo_entry;
 
 #endif
