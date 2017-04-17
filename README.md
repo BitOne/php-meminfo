@@ -168,7 +168,7 @@ The `examples/` directory at the root of the repository contains more detailed e
 
     php examples/size_info.php
 
-##List of currently active objects
+## List of currently active objects
 Provides a list of live objects with their class and their handle, as well as the total number of active objects and the total number of allocated object buckets.
 
 ```php
