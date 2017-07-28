@@ -8,10 +8,10 @@ meminfo_struct_size in 64 bits
 ?>
 --EXPECT--
 Simple Zend Type size on this platform
-  Zend Unsigned Int (zend_uint): 4 bytes.
+  Zend Signed Integer (zend_long): 8 bytes.
+  Zend Unsigned Integer (zend_ulong): 8 bytes.
   Zend Unsigned Char (zend_uchar): 1 bytes.
 Structs size on this platform:
-  Variable value (zvalue_value): 16 bytes.
-  Variable (zval): 24 bytes.
-  Class (zend_class_entry): 576 bytes.
-  Object (zend_object): 32 bytes.
+  Variable (zval): 16 bytes.
+  Class (zend_class_entry): 504 bytes.
+  Object (zend_object): 56 bytes.
