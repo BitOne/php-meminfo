@@ -1,5 +1,5 @@
 --TEST--
-meminfo_objects_summary with no objects
+meminfo_objects_summary with objects
 --FILE--
 <?php
     class A {};
