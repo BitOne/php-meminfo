@@ -9,8 +9,6 @@
 #define MEMINFO_COPYRIGHT  "Copyright (c) 2010-2017 by Benoit Jacquemont"
 #define MEMINFO_COPYRIGHT_SHORT "Copyright (c) 2011-2017"
 
-PHP_FUNCTION(meminfo_structs_size);
-
 PHP_FUNCTION(meminfo_objects_list);
 PHP_FUNCTION(meminfo_objects_summary);
 

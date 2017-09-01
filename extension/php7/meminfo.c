@@ -20,7 +20,6 @@
 
 
 const zend_function_entry meminfo_functions[] = {
-    PHP_FE(meminfo_structs_size, NULL)
     PHP_FE(meminfo_objects_list, NULL)
     PHP_FE(meminfo_objects_summary, NULL)
     PHP_FE(meminfo_info_dump, NULL)
@@ -39,28 +38,6 @@ zend_module_entry meminfo_module_entry = {
     MEMINFO_VERSION,
     STANDARD_MODULE_PROPERTIES
 };
-
-PHP_FUNCTION(meminfo_structs_size)
-{
-    zval *zval_stream;
-    php_stream *stream;
-
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zval_stream) == FAILURE) {
-        return;
-    }
-
-    php_stream_from_zval(stream, zval_stream);
-
-    php_stream_printf(stream, "Simple Zend Type size on this platform\n");
-    php_stream_printf(stream, "  Zend Signed Integer (zend_long): %ld bytes.\n", sizeof(zend_long));
-    php_stream_printf(stream, "  Zend Unsigned Integer (zend_ulong): %ld bytes.\n", sizeof(zend_ulong));
-    php_stream_printf(stream, "  Zend Unsigned Char (zend_uchar): %ld bytes.\n", sizeof(zend_uchar));
-
-    php_stream_printf(stream, "Structs size on this platform:\n");
-    php_stream_printf(stream, "  Variable (zval): %ld bytes.\n", sizeof(zval));
-    php_stream_printf(stream, "  Class (zend_class_entry): %ld bytes.\n", sizeof(zend_class_entry));
-    php_stream_printf(stream, "  Object (zend_object): %ld bytes.\n", sizeof(zend_object));
-}
 
 PHP_FUNCTION(meminfo_objects_list)
 {

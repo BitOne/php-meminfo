@@ -18,7 +18,6 @@
 
 
 const zend_function_entry meminfo_functions[] = {
-    PHP_FE(meminfo_structs_size, NULL)
     PHP_FE(meminfo_objects_list, NULL)
     PHP_FE(meminfo_objects_summary, NULL)
     PHP_FE(meminfo_gc_roots_list, NULL)
