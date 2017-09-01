@@ -191,6 +191,25 @@ The `examples/` directory at the root of the repository contains more detailed e
 
     php examples/objects_list.php
 
+## Information on structs size
+Display size in byte of main data structs size in PHP. Will mainly differ between 32bits et 64bits environments.
+
+```php
+    meminfo_structs_size(fopen('php://stdout','w'));
+```
+
+It can be useful to understand difference in memory usage between two platforms.
+
+Example Output on 64bits environment:
+
+```
+    Structs size on this platform:
+      Class (zend_class_entry): 568 bytes.
+      Object (zend_object): 32 bytes.
+      Variable (zval): 24 bytes.
+      Variable value (zvalue_value): 16 bytes.
+```
+
 Usage in production
 -------------------
 PHP Meminfo can be used in production, as it does not have any impact on performances outside of the call to the `meminfo` functions.
@@ -200,7 +219,7 @@ Nevertheless, production environment is not where you debug ;)
 Other memory debugging tools for PHP
 -------------------------------------
  - XDebug (https://xdebug.org/)
-With the trace feature and the memory delta option (see XDebug documentation), you can trace function memory usage. You can use the provided script to get an aggregated view (TODO link)
+With the trace feature and the memory delta option (tool see XDebug documentation), you can trace function memory usage. You can use the provided script to get an aggregated view (TODO link)
 
  - PHP Memprof (https://github.com/arnaud-lb/php-memory-profiler)
 Provides aggregated data about memory usage by functions. Far less resource intensive than a full trace from XDebug.
