@@ -24,7 +24,7 @@ $ apt-get install php5-dev
 ```
 for PHP 5, or
 ```bash
-$ apt-get install php7;1-dev
+$ apt-get install php7.1-dev
 ```
 for PHP 7.1 when using the Ondrej repository from sury.org.
 
