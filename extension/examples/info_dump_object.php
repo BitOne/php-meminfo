@@ -11,5 +11,3 @@ class MyObject
 $myObject = new MyObject();
 
 meminfo_info_dump(fopen('php://stdout', 'w'));
-
-print_r($GLOBALS);
