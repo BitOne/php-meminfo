@@ -1,0 +1,32 @@
+sudo: false
+
+language: php
+
+php:
+  - 5.4
+  - 5.5
+  - 5.6
+  - 7.0
+  - 7.1
+  - 7.2
+  - nightly
+
+matrix:
+  allow_failures:
+    - php: nightly
+
+before_script:
+  - phpenv config-rm xdebug.ini
+
+script:
+  - cd extension/php$(echo $TRAVIS_PHP_VERSION | cut -b 1)/
+  - phpize
+  - configure
+  - make
+  - make test
+  - cd ../../analyzer
+  - composer install
+  - vendor/bin/phpspec run
+
+after_script:
+  - ./.travis.scripts/show-errors.sh

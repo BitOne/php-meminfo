@@ -8,12 +8,7 @@ One of the main source of inspiration for this tool is the Java jmap tool with t
 
 Compatibility
 -------------
-Compiled and tested on:
-
- - PHP 5.4.4 (Debian 7)
- - PHP 5.5.8 (Ubuntu 12.04 LTS)
- - PHP 5.5.20 (CentOS 7)
- - PHP 5.6.17 (Debian 8)
+PHP 5.6 and PHP 7.1 (may work on PHP 7.0 and 7.2, but not tested yet).
 
 Compilation instructions
 ------------------------
@@ -21,11 +16,16 @@ You will need the `phpize` command. It can be installed on a Debian based system
 ```bash
 $ apt-get install php5-dev
 ```
+for PHP 5, or
+```bash
+$ apt-get install php7.1-dev
+```
+for PHP 7.1 when using the Ondrej repository from sury.org.
 
 Once you have this command, follow this steps:
 
 ## Compilation
-From the root of the `extension/` directory:
+From the root of the `extension/php5` for PHP 5 or `extension/php7` for PHP 7 directory:
 
 ```bash
 $ phpize
@@ -47,61 +47,57 @@ Analyzers allow to analyze a memory dump (see below).
 
 ```bash
 $ cd analyzers
-$ composer update
+$ composer install
 ```
 
 Usage
 -----
-All meminfo functions take a stream handle as a parameter. It allows you to specify a file (ex `fopen('/tmp/file.txt', 'w')`, as well as to use standard output with the `php://stdout` stream.
+The extension has one main function: `meminfo_info_dump`.
 
-## Object instances count per class
-Display the number of instances per class, ordered descending. Very useful to identify the content of a memory leak.
+This function generates a dump of the PHP memory in a JSON format. This dump can be later analyzed by the provided analyzers.
 
-```php
-    meminfo_objects_summary(fopen('php://stdout','w'));
-```
+This functions takes a stream handle as a parameter. It allows you to specify a file (ex `fopen('/tmp/file.txt', 'w')`, as well as to use standard output with the `php://stdout` stream.
 
-The result will provide something similar to the following example generated at the end of a Symfony2 console launch:
-
-```
-    Instances count by class:
-    num          #instances   class
-    -----------------------------------------------------------------
-    1            181          Symfony\Component\Console\Input\InputOption
-    2            88           Symfony\Component\Console\Input\InputDefinition
-    3            77           ReflectionObject
-    4            46           Symfony\Component\Console\Input\InputArgument
-    5            2            Symfony\Bridge\Monolog\Logger
-    6            1            Symfony\Component\EventDispatcher\ContainerAwareEventDispatcher
-    7            1            Doctrine\Bundle\MigrationsBundle\Command\MigrationsDiffDoctrineCommand
-    ...
-```
-
-Note: It's a good idea to call the `gc_collect_cycles()` function before executing  `meminfo_objects_summary()`, as it will collect dead objects that has not been reclaimed by the ref counter due to circular references. See http://www.php.net/manual/en/features.gc.php for more details.
-
-
-### Examples
-The `examples/` directory at the root of the repository contains more detailed examples.
-```bash
-    $ php examples/objects_summary.php
-```
-
-## Memory state dump
-This feature allow to dump the list of items present in memory at the time of the function execution. Each memory items (string, boolean, objects, array, etc...) are dumped in a JSON format, with the following information:
- - in memory address
+## Information gathered
+Each memory item (string, boolean, objects, array, etc...) is dumped with the following information:
+ - in-memory address
  - type (object, array, int, string, ...)
  - class (only for objects)
- - object handle (only for objects.
+ - object handle (only for objects)
  - self size (without the size of the linked objects)
- - is_root (tells if the item is directly linked to a variable)
- - symbol name (variable name, if linked to a variable)
+ - is_root (tells if the item is directly linked to a declared variable in the PHP program)
+ - symbol name (name of the variable name in the PHP program, if the item is linked to a variable)
  - execution frame (name of the method where the variable has been declared)
- - children: list of linked items with the key value if array or property name if object and the item address in memory
+ - children: list of linked items with the key name in case of array or property name if object, associated to their address in memory
 
 ### Dumping memory info
 ```php
 meminfo_info_dump(fopen('/tmp/my_dump_file.json', 'w'));
+
 ```
+Memory Leak Consequences
+------------------------
+
+The main consequences of a memory leak are:
+ - increasing memory usage
+ - decreasing performances
+
+Decreasing performances is usually the most visible part. As memory leak saturates the garbage collector buffer, it runs far more often, without being able to free any memory. This leads to a high CPU usage of the process, with a lot of time spent in the garbage collector instead of your code (garbage collector doesn't run in parallel with the user code in PHP, it has to interrupt it).
+
+See https://speakerdeck.com/bitone/hunting-down-memory-leaks-with-php-meminfo for a more detailed insight on how memory leak can occur.
+
+Memory Leak Hunting Process
+----------------------------
+## Overview
+ 1. dump memory state with `meminfo_info_dump`
+ 2. use the *summary* command of the analyzer to display the item type that is the most present in memory. It's even better to use the summary to display the evolution of objects in memory in order, as the evolution will show where the memory leak really is
+ 3. use the *query* command of the analyzer to find one item from the class that is leaking
+ 4. use the *ref-path* command analyzer to find out the references that still hold this object in memory
+
+## Object Leaks
+On object oriented programming, a memory leak usually consists of *objects* leak.
+
+## Memory state dump
 
 ### Analyzing a memory dump
 The analyzer is available from the `analyzer/` directory. It will be invoked with:
@@ -129,85 +125,10 @@ When you are tracking down a memory leak, it's very interesting to understand wh
 
 The analyzer provides the `ref-path` command that load the memory dump as a graph in memory and findout all paths linking an item to a root (a variable define in an execution frame).
 
-Without the `-v` option, the output will contains only item memory adress and key/property name. Adding the `-v` option will display all the information of the linked items.
+Without the `-v` option, the output will contains only item memory address and key/property name. Adding the `-v` option will display all the information of the linked items.
 
 ```bash
 $ bin/analyzer ref-path my_dump_file.json 0x12345678
-```
-
-## List of items in memory
-Provides a list of items in memory (objects, arrays, string, etc.) with their sizes.
-
-```php
-    meminfo_size_info(fopen('php://stdout','w'));
-```
-
-For example:
-```json
-// ...
-    "0x7fe06ea50a40" : {
-        "type" : "array",
-        "size" : "96",
-        "children" : {
-            "0":"0x7fe06ea649b0"
-        }
-
-    },
-    "0x7fe06ea649b0" : {
-        "type" : "string",
-        "size" : "99"
-
-    },
-//...
-```
-
-Note: The same remark about `gc_collect_cycles()` before `meminfo_objects_summary()` applies as well for this function.
-
-### Examples
-The `examples/` directory at the root of the repository contains more detailed examples.
-
-    php examples/size_info.php
-
-##List of currently active objects
-Provides a list of live objects with their class and their handle, as well as the total number of active objects and the total number of allocated object buckets.
-
-```php
-    meminfo_objects_list(fopen('php://stdout','w'));
-```
-
-For example:
-
-    Objects list:
-      - Class MyClassB, handle 2, refCount 1
-      - Class MyClassC, handle 5, refCount 1
-      - Class MyClassC, handle 6, refCount 1
-      - Class MyClassC, handle 7, refcount 1
-    Total object buckets: 7. Current objects: 4.
-
-Note: The same remark about `gc_collect_cycles()` before `meminfo_objects_summary()` applies as well for this function.
-
-### Examples
-The `examples/` directory at the root of the repository contains more detailed examples.
-
-    php examples/objects_list.php
-
-## Information on structs size
-Display size in byte of main data structs size in PHP. Will mainly differ between 32bits et 64bits environments.
-
-```php
-    meminfo_structs_size(fopen('php://stdout','w'));
-```
-
-It can be useful to understand difference in memory usage between two platforms.
-
-Example Output on 64bits environment:
-
-```
-    Structs size on this platform:
-      Class (zend_class_entry): 568 bytes.
-      Object (zend_object): 32 bytes.
-      Variable (zval): 24 bytes.
-      Variable value (zvalue_value): 16 bytes.
 ```
 
 Usage in production
@@ -227,12 +148,12 @@ Provides aggregated data about memory usage by functions. Far less resource inte
 Troubleshooting
 ---------------
 
-## "Call to undefined function" when calling meminfo_* functions
+## "Call to undefined function" when calling `meminfo_info_dump`
 It certainly means the extension is not enabled.
 
 Check the PHP Info output and look for the MemInfo data.
 
-To see the PHP Info output, just create a page calling the `phpinfo();` function, and load it from your browser, or call `php -i` from command line.
+To see the PHP Info output, just create a page calling the `phpinfo();` function, and load it from your browser, or call `php -i` from the command line.
 
 Credits
 -------
