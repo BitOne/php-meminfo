@@ -1,13 +1,13 @@
-MEMINFO
-=======
+# MEMINFO
+
 PHP Meminfo is a PHP extension that gives you insights on the PHP memory content.
 
 Its main goal is to help you understand memory leaks: by looking at data present in memory, you can better understand your application behaviour.
 
 One of the main source of inspiration for this tool is the Java jmap tool with the -histo option (see `man jmap`).
 
-Compatibility
--------------
+## Compatibility
+
 Compiled and tested on:
 
  - PHP 5.4.4 (Debian 7)
@@ -15,8 +15,9 @@ Compiled and tested on:
  - PHP 5.5.20 (CentOS 7)
  - PHP 5.6.17 (Debian 8)
 
-Compilation instructions
-------------------------
+## Installation
+
+### Compilation instructions
 You will need the `phpize` command. It can be installed on a Debian based system by:
 ```bash
 $ apt-get install php5-dev
@@ -24,7 +25,7 @@ $ apt-get install php5-dev
 
 Once you have this command, follow this steps:
 
-## Compilation
+### Compilation
 From the root of the `extension/` directory:
 
 ```bash
@@ -34,15 +35,14 @@ $ make
 $ make install
 ```
 
-## Enabling the extension
+### Enabling the extension
 Add the following line to your `php.ini`:
 
 ```ini
 extension=meminfo.so
 ```
 
-Installing analyzers
---------------------
+### Installing analyzers
 Analyzers allow to analyze a memory dump (see below).
 
 ```bash
@@ -50,11 +50,11 @@ $ cd analyzers
 $ composer update
 ```
 
-Usage
------
+## Usage
+
 All meminfo functions take a stream handle as a parameter. It allows you to specify a file (ex `fopen('/tmp/file.txt', 'w')`, as well as to use standard output with the `php://stdout` stream.
 
-## Object instances count per class
+### Object instances count per class
 Display the number of instances per class, ordered descending. Very useful to identify the content of a memory leak.
 
 ```php
@@ -80,13 +80,13 @@ The result will provide something similar to the following example generated at 
 Note: It's a good idea to call the `gc_collect_cycles()` function before executing  `meminfo_objects_summary()`, as it will collect dead objects that has not been reclaimed by the ref counter due to circular references. See http://www.php.net/manual/en/features.gc.php for more details.
 
 
-### Examples
+#### Examples
 The `examples/` directory at the root of the repository contains more detailed examples.
 ```bash
     $ php examples/objects_summary.php
 ```
 
-## Memory state dump
+### Memory state dump
 This feature allow to dump the list of items present in memory at the time of the function execution. Each memory items (string, boolean, objects, array, etc...) are dumped in a JSON format, with the following information:
  - in memory address
  - type (object, array, int, string, ...)
@@ -98,18 +98,18 @@ This feature allow to dump the list of items present in memory at the time of th
  - execution frame (name of the method where the variable has been declared)
  - children: list of linked items with the key value if array or property name if object and the item address in memory
 
-### Dumping memory info
+#### Dumping memory info
 ```php
 meminfo_info_dump(fopen('/tmp/my_dump_file.json', 'w'));
 ```
 
-### Analyzing a memory dump
+#### Analyzing a memory dump
 The analyzer is available from the `analyzer/` directory. It will be invoked with:
 ``` bash
 $ bin/analyzer
 ```
 
-#### Querying a memory dump
+##### Querying a memory dump
 The `query` command on the analyzer allows you to filter out some items from a memory dump. The `-f` option can be used several times, effectively *anding* the filters. The supported operators are exact match `=` and regexp match `~`.
 
 The `-v`option display all the information of the items found.
@@ -135,7 +135,7 @@ Without the `-v` option, the output will contains only item memory adress and ke
 $ bin/analyzer ref-path my_dump_file.json 0x12345678
 ```
 
-## List of items in memory
+### List of items in memory
 Provides a list of items in memory (objects, arrays, string, etc.) with their sizes.
 
 ```php
@@ -163,12 +163,12 @@ For example:
 
 Note: The same remark about `gc_collect_cycles()` before `meminfo_objects_summary()` applies as well for this function.
 
-### Examples
+#### Examples
 The `examples/` directory at the root of the repository contains more detailed examples.
 
     php examples/size_info.php
 
-##List of currently active objects
+### List of currently active objects
 Provides a list of live objects with their class and their handle, as well as the total number of active objects and the total number of allocated object buckets.
 
 ```php
@@ -186,12 +186,12 @@ For example:
 
 Note: The same remark about `gc_collect_cycles()` before `meminfo_objects_summary()` applies as well for this function.
 
-### Examples
+#### Examples
 The `examples/` directory at the root of the repository contains more detailed examples.
 
     php examples/objects_list.php
 
-## Information on structs size
+### Information on structs size
 Display size in byte of main data structs size in PHP. Will mainly differ between 32bits et 64bits environments.
 
 ```php
@@ -210,34 +210,28 @@ Example Output on 64bits environment:
       Variable value (zvalue_value): 16 bytes.
 ```
 
-Usage in production
--------------------
+### Usage in production
 PHP Meminfo can be used in production, as it does not have any impact on performances outside of the call to the `meminfo` functions.
 
 Nevertheless, production environment is not where you debug ;)
 
-Other memory debugging tools for PHP
--------------------------------------
+## Other memory debugging tools for PHP
  - XDebug (https://xdebug.org/)
 With the trace feature and the memory delta option (tool see XDebug documentation), you can trace function memory usage. You can use the provided script to get an aggregated view (TODO link)
 
  - PHP Memprof (https://github.com/arnaud-lb/php-memory-profiler)
 Provides aggregated data about memory usage by functions. Far less resource intensive than a full trace from XDebug.
 
-Troubleshooting
----------------
-
-## "Call to undefined function" when calling meminfo_* functions
+## Troubleshooting
+### "Call to undefined function" when calling meminfo_* functions
 It certainly means the extension is not enabled.
 
 Check the PHP Info output and look for the MemInfo data.
 
 To see the PHP Info output, just create a page calling the `phpinfo();` function, and load it from your browser, or call `php -i` from command line.
 
-Credits
--------
+## Credits
 Thanks to Derick Rethans on his inspirational work on the essential XDebug. See http://www.xdebug.org/
 
-Video presentation (in French)
-------------------------------
+## Video presentation (in French)
 https://www.youtube.com/watch?v=wZjnj1PAJ78
