@@ -6,24 +6,16 @@ Its main goal is to help you understand memory leaks: by looking at data present
 
 One of the main source of inspiration for this tool is the Java jmap tool with the -histo option (see `man jmap`).
 
+![Travis CI Results](https://travis-ci.org/BitOne/php-meminfo.svg?branch=master)
+
 Compatibility
 -------------
-PHP 5.6 and PHP 7.1 (may work on PHP 7.0 and 7.2, but not tested yet).
+PHP 5.5, 5.6, 5.7, 7.0, 7.1, and 7.2.
+
+May compiles and works with PHP 5.3 and 5.4 but hasn't been tested with these versions.
 
 Compilation instructions
 ------------------------
-You will need the `phpize` command. It can be installed on a Debian based system by:
-```bash
-$ apt-get install php5-dev
-```
-for PHP 5, or
-```bash
-$ apt-get install php7.1-dev
-```
-for PHP 7.1 when using the Ondrej repository from sury.org.
-
-Once you have this command, follow this steps:
-
 ## Compilation
 From the root of the `extension/php5` for PHP 5 or `extension/php7` for PHP 7 directory:
 
@@ -46,96 +38,162 @@ Installing analyzers
 Analyzers allow to analyze a memory dump (see below).
 
 ```bash
-$ cd analyzers
+$ cd analyzer
 $ composer install
 ```
 
 Usage
 -----
-The extension has one main function: `meminfo_info_dump`.
+## Dumping memory content
+
+```php
+meminfo_dump(fopen('/tmp/my_dump_file.json', 'w'));
+
+```
 
 This function generates a dump of the PHP memory in a JSON format. This dump can be later analyzed by the provided analyzers.
 
 This functions takes a stream handle as a parameter. It allows you to specify a file (ex `fopen('/tmp/file.txt', 'w')`, as well as to use standard output with the `php://stdout` stream.
 
-## Information gathered
-Each memory item (string, boolean, objects, array, etc...) is dumped with the following information:
- - in-memory address
- - type (object, array, int, string, ...)
- - class (only for objects)
- - object handle (only for objects)
- - self size (without the size of the linked objects)
- - is_root (tells if the item is directly linked to a declared variable in the PHP program)
- - symbol name (name of the variable name in the PHP program, if the item is linked to a variable)
- - execution frame (name of the method where the variable has been declared)
- - children: list of linked items with the key name in case of array or property name if object, associated to their address in memory
-
-### Dumping memory info
-```php
-meminfo_info_dump(fopen('/tmp/my_dump_file.json', 'w'));
-
-```
-Memory Leak Consequences
-------------------------
-
-The main consequences of a memory leak are:
- - increasing memory usage
- - decreasing performances
-
-Decreasing performances is usually the most visible part. As memory leak saturates the garbage collector buffer, it runs far more often, without being able to free any memory. This leads to a high CPU usage of the process, with a lot of time spent in the garbage collector instead of your code (garbage collector doesn't run in parallel with the user code in PHP, it has to interrupt it).
-
-See https://speakerdeck.com/bitone/hunting-down-memory-leaks-with-php-meminfo for a more detailed insight on how memory leak can occur.
-
-Memory Leak Hunting Process
-----------------------------
-## Overview
- 1. dump memory state with `meminfo_info_dump`
- 2. use the *summary* command of the analyzer to display the item type that is the most present in memory. It's even better to use the summary to display the evolution of objects in memory in order, as the evolution will show where the memory leak really is
- 3. use the *query* command of the analyzer to find one item from the class that is leaking
- 4. use the *ref-path* command analyzer to find out the references that still hold this object in memory
-
-## Object Leaks
-On object oriented programming, a memory leak usually consists of *objects* leak.
-
-## Memory state dump
-
-### Analyzing a memory dump
-The analyzer is available from the `analyzer/` directory. It will be invoked with:
-``` bash
-$ bin/analyzer
-```
-
-#### Querying a memory dump
-The `query` command on the analyzer allows you to filter out some items from a memory dump. The `-f` option can be used several times, effectively *anding* the filters. The supported operators are exact match `=` and regexp match `~`.
-
-The `-v`option display all the information of the items found.
-
-##### Examples
- - finding array that are not directly linked to a variable
+## Displaying a summary of items in memory
 ```bash
-$ bin/analyzer query -f "type=array" -f "is_root=0" my_dump_file.json
+$ bin/analyzer summary <dump-file>
+
+Arguments:
+  dump-file             PHP Meminfo Dump File in JSON format
 ```
- - finding objects whose class name contains `Product` and linked to a variable
+
+### Example
 ```bash
-$ bin/analyzer query -f "class~Product" -f "is_root=1" -v my_dump_file.json
+$ bin/analyzer summary /tmp/my_dump_file.json
++----------+-----------------+-----------------------------+
+| Type     | Instances Count | Cumulated Self Size (bytes) |
++----------+-----------------+-----------------------------+
+| string   | 132             | 7079                        |
+| MyClassA | 100             | 7200                        |
+| array    | 10              | 720                         |
+| integer  | 5               | 80                          |
+| float    | 2               | 32                          |
+| null     | 1               | 16                          |
++----------+-----------------+-----------------------------+
 ```
 
-#### Finding out why an object has not been removed from memory
-When you are tracking down a memory leak, it's very interesting to understand why an object is still in memory.
+## Querying the memory dump to find specific objects
+```bash
+$ bin/analyzer query [options] [--] <dump-file>
 
-The analyzer provides the `ref-path` command that load the memory dump as a graph in memory and findout all paths linking an item to a root (a variable define in an execution frame).
+Arguments:
+  dump-file              PHP Meminfo Dump File in JSON format
 
-Without the `-v` option, the output will contains only item memory address and key/property name. Adding the `-v` option will display all the information of the linked items.
+Options:
+  -f, --filters=FILTERS  Filter on an attribute. Operators: =, ~. Example: class~User (multiple values allowed)
+  -l, --limit=LIMIT      Number of results limit (default 10).
+  -v                     Increase the verbosity
+```
+
+### Example
 
 ```bash
-$ bin/analyzer ref-path my_dump_file.json 0x12345678
+$ bin/analyzer query -v -f "class=MyClassA" -f "is_root=0" /tmp/php_mem_dump.json
++----------------+-------------------+------------------------------+
+| Item ids       | Item data         | Children                     |
++----------------+-------------------+------------------------------+
+| 0x7f94a1877008 | Type: object      | myObjectName: 0x7f94a185cca0 |
+|                | Class: MyClassA   |                              |
+|                | Object Handle: 1  |                              |
+|                | Size: 72 B        |                              |
+|                | Is root: No       |                              |
++----------------+-------------------+------------------------------+
+| 0x7f94a1877028 | Type: object      | myObjectName: 0x7f94a185cde0 |
+|                | Class: MyClassA   |                              |
+|                | Object Handle: 2  |                              |
+|                | Size: 72 B        |                              |
+|                | Is root: No       |                              |
++----------------+-------------------+------------------------------+
+| 0x7f94a1877048 | Type: object      | myObjectName: 0x7f94a185cf20 |
+|                | Class: MyClassA   |                              |
+...
+
 ```
 
-Usage in production
--------------------
-PHP Meminfo can be used in production, as it does not have any impact on performances outside of the call to the `meminfo` functions.
+## Displaying the reference path
+The reference path is the path between a specific item in memory (identified by it's
+pointer address) and all the intermediary items up to the one item that is attached
+to a variable still alive in the program.
 
-Nevertheless, production environment is not where you debug ;)
+This path shows who are the items responsible for the memory leak of the specific item
+provided.
+
+```bash
+$ bin/analyzer ref-path <item-id> <dump-file>
+
+Arguments:
+  item-id               Item Id in 0xaaaaaaaa format
+  dump-file             PHP Meminfo Dump File in JSON format
+
+Options:
+  -v                     Increase the verbosity
+```
+
+### Example
+
+```bash
+$ bin/analyzer ref-path 0x7f94a1877068 /tmp/php_mem_dump.json
+Found 1 paths
+Path from 0x7f94a1856260
++--------------------+
+| Id: 0x7f94a1877068 |
+| Type: object       |
+| Class: MyClassA    |
+| Object Handle: 4   |
+| Size: 72 B         |
+| Is root: No        |
+| Children count: 1  |
++--------------------+
+         ^
+         |
+         3
+         |
+         |
++---------------------+
+| Id: 0x7f94a185cb60  |
+| Type: array         |
+| Size: 72 B          |
+| Is root: No         |
+| Children count: 100 |
++---------------------+
+         ^
+         |
+    second level
+         |
+         |
++--------------------+
+| Id: 0x7f94a185ca20 |
+| Type: array        |
+| Size: 72 B         |
+| Is root: No        |
+| Children count: 1  |
++--------------------+
+         ^
+         |
+    first level
+         |
+         |
++---------------------------+
+| Id: 0x7f94a1856260        |
+| Type: array               |
+| Size: 72 B                |
+| Is root: Yes              |
+| Execution Frame: <GLOBAL> |
+| Symbol Name: myRootArray  |
+| Children count: 1         |
++---------------------------+
+```
+
+A worflow to find and understand memory leak by using PHP Meminfo
+-----------------------------------------------------------------
+
+[Hunting down memory leaks](doc/hunting_down_memory_leaks.md)
 
 Other memory debugging tools for PHP
 -------------------------------------
@@ -148,7 +206,7 @@ Provides aggregated data about memory usage by functions. Far less resource inte
 Troubleshooting
 ---------------
 
-## "Call to undefined function" when calling `meminfo_info_dump`
+## "Call to undefined function" when calling `meminfo_dump`
 It certainly means the extension is not enabled.
 
 Check the PHP Info output and look for the MemInfo data.
@@ -157,8 +215,4 @@ To see the PHP Info output, just create a page calling the `phpinfo();` function
 
 Credits
 -------
-Thanks to Derick Rethans on his inspirational work on the essential XDebug. See http://www.xdebug.org/
-
-Video presentation (in French)
-------------------------------
-https://www.youtube.com/watch?v=wZjnj1PAJ78
+Thanks to Derick Rethans for his inspirational work on the essential XDebug. See http://www.xdebug.org/

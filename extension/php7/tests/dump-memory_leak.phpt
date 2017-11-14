@@ -1,5 +1,5 @@
 --TEST--
-meminfo_objects_list with some objects
+meminfo_dump check there's no memory leak
 --FILE--
 <?php
     require dirname(__FILE__) . '/fixtures/books.php';
@@ -20,7 +20,7 @@ meminfo_objects_list with some objects
     gc_collect_cycles();
     $startM = memory_get_usage(true);
     while ($attemptCount-- > 0) {
-        meminfo_info_dump($rFilePointer);
+        meminfo_dump($rFilePointer);
     }
     fclose($rFilePointer);
     gc_collect_cycles();
