@@ -2,8 +2,7 @@
 meminfo_objects_list with some objects
 --FILE--
 <?php
-    $docTest = new DOMDocument();
-    $docTest->load(__DIR__.'/fixture/book.xml');
+    require dirname(__FILE__) . '/fixtures/books.php';
 
     $rFilePointer = fopen('/dev/null', 'rw');
 
@@ -13,8 +12,8 @@ meminfo_objects_list with some objects
         'itemDoubles' => 1.2e3,
         'itemNull' => null,
         'itemString' => 'hello',
-        'itemObject' => $docTest,
-        'itemArray' => (array) $docTest,
+        'itemObject' => $books,
+        'itemArray' => (array) $books,
         'itemResource' => $rFilePointer,
     ];
     $attemptCount = 1000;
@@ -26,7 +25,7 @@ meminfo_objects_list with some objects
     fclose($rFilePointer);
     gc_collect_cycles();
     $endM = memory_get_usage(true);
-    if ($endM / $startM < 2) {
+    if ($endM - $startM === 0) {
         echo 'Memory leak test was successful';
     } else {
         echo "Memory leak test was failed\n";

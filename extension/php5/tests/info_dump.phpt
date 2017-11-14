@@ -1,9 +1,12 @@
 --TEST--
 meminfo_objects_list with some objects
+--SKIPIF--
+<?php
+    if (!extension_loaded('json')) die('skip json ext not loaded');
+?>
 --FILE--
 <?php
-    $docTest = new DOMDocument();
-    $docTest->load(__DIR__.'/fixture/book.xml');
+    require dirname(__FILE__) . '/fixtures/books.php';
 
     $rFilePointer = fopen('php://memory', 'rw');
 
@@ -13,8 +16,8 @@ meminfo_objects_list with some objects
         'itemDoubles' => 1.2e3,
         'itemNull' => null,
         'itemString' => 'hello',
-        'itemObject' => $docTest,
-        'itemArray' => (array) $docTest,
+        'itemObject' => $books,
+        'itemArray' => (array) $books,
         'itemResource' => $rFilePointer,
     ];
 

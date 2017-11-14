@@ -1,0 +1,10 @@
+/*.diff
+/*.mem
+/*.log
+/*.out
+/*.exp
+/*.swp
+/*.php
+/*.sh
+/phpt.*
+
