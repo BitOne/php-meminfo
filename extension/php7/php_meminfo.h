@@ -9,7 +9,7 @@
 #define MEMINFO_COPYRIGHT  "Copyright (c) 2010-2017 by Benoit Jacquemont"
 #define MEMINFO_COPYRIGHT_SHORT "Copyright (c) 2011-2017"
 
-PHP_FUNCTION(meminfo_info_dump);
+PHP_FUNCTION(meminfo_dump);
 
 zend_ulong   meminfo_get_element_size(zval* z);
 
@@ -22,7 +22,7 @@ int meminfo_visit_item(char *item_label, HashTable *visited_items);
 void meminfo_build_frame_label(char * frame_label, int frame_label_len, zend_execute_data* frame);
 
 zend_string * meminfo_escape_for_json(const char *s);
-char * meminfo_info_dump_header(char * header, int header_len);
+char * meminfo_dump_header(char * header, int header_len);
 
 extern zend_module_entry meminfo_entry;
 

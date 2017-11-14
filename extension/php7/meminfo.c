@@ -18,7 +18,7 @@
 
 
 const zend_function_entry meminfo_functions[] = {
-    PHP_FE(meminfo_info_dump, NULL)
+    PHP_FE(meminfo_dump, NULL)
     PHP_FE_END
 };
 
@@ -39,7 +39,7 @@ zend_module_entry meminfo_module_entry = {
  * Generate a JSON output of the list of items in memory (objects, arrays, string, etc...)
  * with their sizes and other information
  */
-PHP_FUNCTION(meminfo_info_dump)
+PHP_FUNCTION(meminfo_dump)
 {
     zval *zval_stream;
     zend_execute_data *exec_frame, *prev_frame;
@@ -63,7 +63,7 @@ PHP_FUNCTION(meminfo_info_dump)
     php_stream_printf(stream TSRMLS_CC, "{\n");
 
     php_stream_printf(stream TSRMLS_CC, "\"header\":\n");
-    php_stream_printf(stream TSRMLS_CC, meminfo_info_dump_header(header, sizeof(header)));
+    php_stream_printf(stream TSRMLS_CC, meminfo_dump_header(header, sizeof(header)));
     php_stream_printf(stream TSRMLS_CC, ",\n");
 
     php_stream_printf(stream TSRMLS_CC, "\"items\": {\n");
@@ -426,7 +426,7 @@ zend_string * meminfo_escape_for_json(const char *s)
  * Generate a JSON header for the meminfo
  *
  */
-char * meminfo_info_dump_header(char * header, int header_len)
+char * meminfo_dump_header(char * header, int header_len)
 {
     size_t memory_usage;
     size_t memory_usage_real;

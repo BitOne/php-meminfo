@@ -18,7 +18,7 @@
 
 
 const zend_function_entry meminfo_functions[] = {
-    PHP_FE(meminfo_info_dump, NULL)
+    PHP_FE(meminfo_dump, NULL)
     {NULL, NULL, NULL}
 };
 
@@ -40,7 +40,7 @@ zend_module_entry meminfo_module_entry = {
  * Generate a JSON output of the list of items in memory (objects, arrays, string, etc...)
  * with their sizes and other information
  */
-PHP_FUNCTION(meminfo_info_dump)
+PHP_FUNCTION(meminfo_dump)
 {
     zval *zval_stream;
     zend_execute_data *exec_frame;
@@ -64,7 +64,7 @@ PHP_FUNCTION(meminfo_info_dump)
     php_stream_printf(stream TSRMLS_CC, "{\n");
 
     php_stream_printf(stream TSRMLS_CC, "\"header\":\n");
-    php_stream_printf(stream TSRMLS_CC, meminfo_info_dump_header(header, sizeof(header)));
+    php_stream_printf(stream TSRMLS_CC, meminfo_dump_header(header, sizeof(header) TSRMLS_CC));
     php_stream_printf(stream TSRMLS_CC, ",\n");
 
     php_stream_printf(stream TSRMLS_CC, "\"items\": {\n");
@@ -84,28 +84,28 @@ PHP_FUNCTION(meminfo_info_dump)
         // Switch the active frame to the current browsed one and rebuild the symbol table
         // to get it right
         EG(current_execute_data) = exec_frame;
-        zend_rebuild_symbol_table();
+        zend_rebuild_symbol_table(TSRMLS_C);
         symbol_table = EG(active_symbol_table);
 
         // Once we have the symbol table, switch to the prev frame to get the right frame name
         exec_frame = exec_frame->prev_execute_data;
 
         if (exec_frame) {
-            meminfo_build_frame_label(frame_label, sizeof(frame_label), exec_frame);
+            meminfo_build_frame_label(frame_label, sizeof(frame_label), exec_frame TSRMLS_CC);
 
-            meminfo_browse_zvals_from_symbol_table(stream, frame_label, symbol_table, visited_items, &first_element);
+            meminfo_browse_zvals_from_symbol_table(stream, frame_label, symbol_table, visited_items, &first_element TSRMLS_CC);
 
             exec_frame = exec_frame->prev_execute_data;
         }
     }
     EG(current_execute_data) = init_exec_frame;
-    zend_rebuild_symbol_table();
+    zend_rebuild_symbol_table(TSRMLS_C);
 
     global_symbol_table = &EG(symbol_table);
 
     strcpy(frame_label, "<GLOBAL>");
 
-    meminfo_browse_zvals_from_symbol_table(stream, frame_label, global_symbol_table, visited_items, &first_element);
+    meminfo_browse_zvals_from_symbol_table(stream, frame_label, global_symbol_table, visited_items, &first_element TSRMLS_CC);
 
     php_stream_printf(stream TSRMLS_CC, "\n    }\n");
     php_stream_printf(stream TSRMLS_CC, "}\n}\n");
@@ -121,7 +121,7 @@ PHP_FUNCTION(meminfo_info_dump)
  *
  * @return char * class name
  */
-const char * meminfo_get_classname(zend_object_handle handle)
+const char * meminfo_get_classname(zend_object_handle handle TSRMLS_DC)
 {
     zend_objects_store *objects = &EG(objects_store);
     zend_object *object;
@@ -141,7 +141,7 @@ const char * meminfo_get_classname(zend_object_handle handle)
     return class_name;
 }
 
-void meminfo_browse_zvals_from_symbol_table(php_stream *stream, char* frame_label, HashTable *symbol_table, HashTable * visited_items, int *first_element)
+void meminfo_browse_zvals_from_symbol_table(php_stream *stream, char* frame_label, HashTable *symbol_table, HashTable * visited_items, int *first_element TSRMLS_DC)
 {
     zval **zval_to_dump;
     HashPosition pos;
@@ -155,13 +155,13 @@ void meminfo_browse_zvals_from_symbol_table(php_stream *stream, char* frame_labe
 
         zend_hash_get_current_key_ex(symbol_table, &key, &key_len, &num_key, 0, &pos);
 
-        meminfo_zval_dump(stream, frame_label, key, *zval_to_dump, visited_items, first_element);
+        meminfo_zval_dump(stream, frame_label, key, *zval_to_dump, visited_items, first_element TSRMLS_CC);
 
         zend_hash_move_forward_ex(symbol_table, &pos);
     }
 }
 
-int meminfo_visit_item(const char * item_label, HashTable *visited_items)
+int meminfo_visit_item(const char * item_label, HashTable *visited_items TSRMLS_DC)
 {
     int found = 0;
     int isset = 1;
@@ -176,7 +176,7 @@ int meminfo_visit_item(const char * item_label, HashTable *visited_items)
     return found;
 }
 
-void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, HashTable *visited_items, int *first_element)
+void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, HashTable *visited_items, int *first_element TSRMLS_DC)
 {
     zval **zval;
     char *key, *char_buf;;
@@ -205,11 +205,11 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
                 if (is_object) {
                     const char *property_name, *class_name;
                     zend_unmangle_property_name(key, key_len - 1, &class_name, &property_name);
-                    char_buf = meminfo_escape_for_json(property_name);
+                    char_buf = meminfo_escape_for_json(property_name TSRMLS_CC);
                     php_stream_printf(stream TSRMLS_CC, "            \"%s\":\"%p\"", char_buf, *zval );
                     efree(char_buf);
                 } else {
-                    char_buf = meminfo_escape_for_json(key);
+                    char_buf = meminfo_escape_for_json(key TSRMLS_CC);
                     php_stream_printf(stream TSRMLS_CC, "            \"%s\":\"%p\"", char_buf, *zval );
                     efree(char_buf);
                 }
@@ -226,18 +226,18 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
 
     zend_hash_internal_pointer_reset_ex(ht, &pos);
     while (zend_hash_get_current_data_ex(ht, (void **) &zval, &pos) == SUCCESS) {
-        meminfo_zval_dump(stream, NULL, NULL, *zval, visited_items, first_element);
+        meminfo_zval_dump(stream, NULL, NULL, *zval, visited_items, first_element TSRMLS_CC);
         zend_hash_move_forward_ex(ht, &pos);
     }
 }
 
-void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_name, zval * zv, HashTable *visited_items, int *first_element)
+void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_name, zval * zv, HashTable *visited_items, int *first_element TSRMLS_DC)
 {
     char zval_id[16];
     char *char_buf;
     sprintf(zval_id, "%p", zv);
 
-    if (meminfo_visit_item(zval_id, visited_items)) {
+    if (meminfo_visit_item(zval_id, visited_items TSRMLS_CC)) {
         return;
     }
 
@@ -249,16 +249,16 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_na
 
     php_stream_printf(stream TSRMLS_CC, "    \"%s\" : {\n", zval_id);
     php_stream_printf(stream TSRMLS_CC, "        \"type\" : \"%s\",\n", zend_get_type_by_const(Z_TYPE_P(zv)));
-    php_stream_printf(stream TSRMLS_CC, "        \"size\" : \"%ld\",\n", meminfo_get_element_size(zv));
+    php_stream_printf(stream TSRMLS_CC, "        \"size\" : \"%ld\",\n", meminfo_get_element_size(zv TSRMLS_CC));
 
     if (frame_label) {
         if (symbol_name) {
-            char_buf = meminfo_escape_for_json(symbol_name);
+            char_buf = meminfo_escape_for_json(symbol_name TSRMLS_CC);
             php_stream_printf(stream TSRMLS_CC, "        \"symbol_name\" : \"%s\",\n", char_buf);
             efree(char_buf);
         }
         php_stream_printf(stream TSRMLS_CC, "        \"is_root\" : true,\n");
-        char_buf = meminfo_escape_for_json(frame_label);
+        char_buf = meminfo_escape_for_json(frame_label TSRMLS_CC);
         php_stream_printf(stream TSRMLS_CC, "        \"frame\" : \"%s\"\n", char_buf);
         efree(char_buf);
     } else {
@@ -273,7 +273,7 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_na
         int is_temp;
 
         php_stream_printf(stream TSRMLS_CC, ",\n");
-        char_buf = meminfo_escape_for_json(meminfo_get_classname(zv->value.obj.handle));
+        char_buf = meminfo_escape_for_json(meminfo_get_classname(zv->value.obj.handle TSRMLS_CC) TSRMLS_CC);
         php_stream_printf(stream TSRMLS_CC, "        \"class\" : \"%s\",\n", char_buf);
         efree(char_buf);
         php_stream_printf(stream TSRMLS_CC, "        \"object_handle\" : \"%d\",\n", zv->value.obj.handle);
@@ -281,7 +281,7 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_na
         properties = Z_OBJDEBUG_P(zv, is_temp);
 
         if (properties != NULL) {
-            meminfo_hash_dump(stream, properties, 1, visited_items, first_element);
+            meminfo_hash_dump(stream, properties, 1, visited_items, first_element TSRMLS_CC);
 
             if (is_temp) {
                 zend_hash_destroy(properties);
@@ -290,7 +290,7 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_na
         }
     } else if (Z_TYPE_P(zv) == IS_ARRAY) {
         php_stream_printf(stream TSRMLS_CC, ",\n");
-        meminfo_hash_dump(stream, zv->value.ht, 0, visited_items, first_element);
+        meminfo_hash_dump(stream, zv->value.ht, 0, visited_items, first_element TSRMLS_CC);
     } else {
         php_stream_printf(stream TSRMLS_CC, "\n");
     }
@@ -303,7 +303,7 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, char * symbol_na
  *
  * @return zend_ulong
  */
-zend_ulong meminfo_get_element_size(zval *zv)
+zend_ulong meminfo_get_element_size(zval *zv TSRMLS_DC)
 {
     zend_ulong size;
 
@@ -330,7 +330,7 @@ zend_ulong meminfo_get_element_size(zval *zv)
  * Build the current frame label based on function name and object class
  * if necessary
  */
-void meminfo_build_frame_label(char* frame_label, int frame_label_len, zend_execute_data* frame)
+void meminfo_build_frame_label(char* frame_label, int frame_label_len, zend_execute_data* frame TSRMLS_DC)
 {
     const char* function_name;
     const char *class_name = NULL;
@@ -418,7 +418,7 @@ void meminfo_build_frame_label(char* frame_label, int frame_label_len, zend_exec
 /**
  * Escape the \ and " characters for JSON encoding
  */
-char * meminfo_escape_for_json(const char *s)
+char * meminfo_escape_for_json(const char *s TSRMLS_DC)
 {
     int new_str_len;
     char *s1, *s2;
@@ -437,18 +437,18 @@ char * meminfo_escape_for_json(const char *s)
  * Generate a JSON header for the meminfo
  *
  */
-char * meminfo_info_dump_header(char * header, int header_len)
+char * meminfo_dump_header(char * header, int header_len TSRMLS_DC)
 {
     size_t memory_usage;
     size_t memory_usage_real;
     size_t peak_memory_usage;
     size_t peak_memory_usage_real;
 
-    memory_usage = zend_memory_usage(0);
-    memory_usage_real = zend_memory_usage(1);
+    memory_usage = zend_memory_usage(0 TSRMLS_CC);
+    memory_usage_real = zend_memory_usage(1 TSRMLS_CC);
 
-    peak_memory_usage = zend_memory_peak_usage(0);
-    peak_memory_usage_real = zend_memory_peak_usage(1);
+    peak_memory_usage = zend_memory_peak_usage(0 TSRMLS_CC);
+    peak_memory_usage_real = zend_memory_peak_usage(1 TSRMLS_CC);
 
     snprintf(
         header,
