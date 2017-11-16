@@ -29,14 +29,14 @@ class ReferencePathCommand extends Command
             ->setName('ref-path')
             ->setDescription('Find reference paths to an item')
             ->addArgument(
-                'dump-file',
-                InputArgument::REQUIRED,
-                'PHP Meminfo Dump File in JSON format'
-            )
-            ->addArgument(
                 'item-id',
                 InputArgument::REQUIRED,
                 'Item Id in 0xaaaaaaaa format'
+            )
+            ->addArgument(
+                'dump-file',
+                InputArgument::REQUIRED,
+                'PHP Meminfo Dump File in JSON format'
             );
     }
 
