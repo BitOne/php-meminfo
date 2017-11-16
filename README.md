@@ -38,8 +38,8 @@ Installing analyzers
 Analyzers allow to analyze a memory dump (see below).
 
 ```bash
-$ cd analyzers
-$ composer install
+$ cd analyzer
+$ composer update
 ```
 
 Usage
