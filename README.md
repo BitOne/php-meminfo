@@ -14,6 +14,16 @@ PHP 5.5, 5.6, 7.0, 7.1, and 7.2.
 
 May compiles and works with PHP 5.3 and 5.4 but hasn't been tested with these versions.
 
+Installation
+------------
+On macOS you can install or upgrade the extension using [Homebrew](https://brew.sh)
+
+For exmaple, if you want to install PHP Meminfo for PHP 7.1, run:
+
+```bash
+$ brew install php71-meminfo
+```
+
 Compilation instructions
 ------------------------
 ## Compilation
