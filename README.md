@@ -148,7 +148,7 @@ Options:
 ### Example
 
 ```bash
-$ bin/analyzer ref-path 0x7f94a1877068 /tmp/php_mem_dump.json
+$ bin/analyzer ref-path -v 0x7f94a1877068 /tmp/php_mem_dump.json
 Found 1 paths
 Path from 0x7f94a1856260
 +--------------------+
@@ -222,6 +222,24 @@ It certainly means the extension is not enabled.
 Check the PHP Info output and look for the MemInfo data.
 
 To see the PHP Info output, just create a page calling the `phpinfo();` function, and load it from your browser, or call `php -i` from the command line.
+
+## Why most tests are "skipped"?
+
+While doing a `make test`, some test will need JSON capabilities. But The
+compilation system generates a clean env by removing all configuration
+directives that load extension.
+So if JSON capabilites are packaged as a separate extension (instead of
+being compiled directly in the PHP runtime), the tests will be skipped.
+
+You may run them with the `run-tests.php` generated after the `make test`
+command, by providing the `php` executable:
+
+```bash
+$ TEST_PHP_EXECUTABLE=/usr/bin/php php run-tests.php
+
+```
+In this case, your tests will run with your local PHP configuration,
+including the loading of the JSON extension.
 
 Credits
 -------

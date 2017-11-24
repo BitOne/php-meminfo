@@ -416,21 +416,33 @@ void meminfo_build_frame_label(char* frame_label, int frame_label_len, zend_exec
 }
 
 /**
- * Escape the \ and " characters for JSON encoding
+ * Escape for JSON encoding
  */
 char * meminfo_escape_for_json(const char *s TSRMLS_DC)
 {
-    int new_str_len;
-    char *s1, *s2;
+    int new_str_len, i;
+    char unescaped_char[2];
+    char escaped_char[7]; // \uxxxx format
+    char *s1, *s2, *s3 = NULL;
 
     s1 = php_str_to_str((char *) s, strlen(s), "\\", 1, "\\\\", 2, &new_str_len);
     s2 = php_str_to_str(s1, strlen(s1), "\"", 1, "\\\"", 2, &new_str_len);
 
-    if (s1) {
-        efree(s1);
+    for (i = 0; i <= 0x1f; i++) {
+        unescaped_char[0] =  (char) i;
+        sprintf(escaped_char, "\\u%04x", i);
+        if (s3) {
+            s2 = s3;
+        }
+        s3 = php_str_to_str(s2, strlen(s2), unescaped_char, 1, escaped_char, 6, &new_str_len);
+        if (s2) {
+            efree(s2);
+        }
     }
 
-    return s2;
+    efree(s1);
+
+    return s3;
 }
 
 /**
