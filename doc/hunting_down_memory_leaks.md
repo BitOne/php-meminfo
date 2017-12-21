@@ -25,7 +25,7 @@ How to hunt Memory Leak Down
 ## Process Overview
  1. Dump memory state.
  2. Display a *summary* of items in memory.
- 3. Find an item that shouldn't be in memory anymore, but his part of the dump.
+ 3. Find an item that shouldn't be in memory anymore, but is part of the dump.
  4. Track down the reference that are still holding the object in memory.
  5. Fix the code.
  6. Profit!
