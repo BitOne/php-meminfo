@@ -5,6 +5,7 @@ namespace BitOne\PhpMemInfo\Console;
 use BitOne\PhpMemInfo\Console\Command\QueryCommand;
 use BitOne\PhpMemInfo\Console\Command\ReferencePathCommand;
 use BitOne\PhpMemInfo\Console\Command\SummaryCommand;
+use BitOne\PhpMemInfo\Console\Command\DiffCommand;
 use Symfony\Component\Console\Application as BaseApplication;
 
 /**
@@ -21,5 +22,6 @@ class Application extends BaseApplication
         $this->add(new QueryCommand());
         $this->add(new ReferencePathCommand());
         $this->add(new SummaryCommand());
+        $this->add(new DiffCommand());
     }
 }
