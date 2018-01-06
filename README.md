@@ -219,6 +219,42 @@ Path from 0x7f94a1856260
 +---------------------------+
 ```
 
+## Comparing two memory dumps
+Will allow you to see which objects counts and size have changed. 
+
+```bash
+$ bin/analyzer   diff [options] [--] <first-file> <second-file>
+               
+Arguments:
+    first-file            PHP Meminfo Dump File in JSON format
+    second-file           PHP Meminfo Dump File in JSON format to compare first file with
+
+Options:
+    -s, --sort[=SORT]     Define sorting order when displaying diff. Available options are :
+                           - c : Sort by count
+                           - s : Sort by size
+                           - dc : Sort by the count differene
+                           - ds : Sort by the size difference
+```
+
+### Exemple 
+
+Fallowing exemple displays the diff sorting them by difference in size.
+
+```bash
+$ bin/analyzer diff eXpansion-mem-dump-2018-01-06T11\:37\:38+0000.json eXpansion-mem-dump-2018-01-06T12\:04\:23+0000.json  -sds
++-------------------------------------------------------------+-----------------------+-----------------------------------+-----------------------+--------------------------+
+| Type                                                        | First Instances Count | First Cumulated Self Size (bytes) | Second Instances Diff | Second Size Diff (bytes) |
++-------------------------------------------------------------+-----------------------+-----------------------------------+-----------------------+--------------------------+
+| string                                                      | 7495                  | 436324                            | +372                  | +23447                   |
+| array                                                       | 2097                  | 150984                            | +28                   | +2016                    |
+| integer                                                     | 769                   | 12304                             | +61                   | +976                     |
+| DateTime                                                    | 10                    | 720                               | +8                    | +576                     |
+| boolean                                                     | 795                   | 12720                             | +15                   | +240                     |
+| eXpansion\Bundle\LocalRecords\Model\Record                  | 2                     | 144                               | +2                    | +144                     |
+| eXpansion\Framework\Core\Listener\BaseStorageUpdateListener | 3                     | 216                               | +1                    | +72                      |
+```
+
 A worflow to find and understand memory leak by using PHP Meminfo
 -----------------------------------------------------------------
 
