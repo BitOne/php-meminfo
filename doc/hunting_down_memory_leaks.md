@@ -131,7 +131,7 @@ To automatically find the path from our leaked object to the root that makes it 
 in memory, we will use the `ref-path` command.
 
 ```bash
-$ bin/analyzer ref-path 0x7f94a1877068 /tmp/php_mem_dump.json
+$ bin/analyzer -v ref-path 0x7f94a1877068 /tmp/php_mem_dump.json
 Found 1 paths
 Path from 0x7f94a1856260
 +--------------------+
