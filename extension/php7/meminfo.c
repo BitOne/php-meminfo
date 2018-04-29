@@ -226,6 +226,8 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
 
     if (Z_TYPE_P(zv) == IS_INDIRECT) {
         zv = Z_INDIRECT_P(zv);
+    } else if (Z_ISREF_P(zv)) {
+        ZVAL_DEREF(zv);
     }
 
     php_stream_printf(stream TSRMLS_CC, "    \"%s\" : {\n", zval_id);
