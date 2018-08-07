@@ -54,6 +54,7 @@ PHP_FUNCTION(meminfo_dump)
 
     php_stream *stream;
     HashTable *visited_items;
+    zend_array *p_symbol_table;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zval_stream) == FAILURE) {
         return;
@@ -80,7 +81,7 @@ PHP_FUNCTION(meminfo_dump)
         // Switch the active frame to the current browsed one and rebuild the symbol table
         // to get it right
         EG(current_execute_data) = exec_frame;
-        zend_rebuild_symbol_table();
+        p_symbol_table = zend_rebuild_symbol_table();
 
         // Once we have the symbol table, switch to the prev frame to get the right frame name
         prev_frame = exec_frame->prev_execute_data;
@@ -93,7 +94,7 @@ PHP_FUNCTION(meminfo_dump)
             }
         }
 
-        meminfo_browse_zvals_from_symbol_table(stream, frame_label, &EG(symbol_table), visited_items, &first_element);
+        meminfo_browse_zvals_from_symbol_table(stream, frame_label, p_symbol_table, visited_items, &first_element);
 
         exec_frame = exec_frame->prev_execute_data;
     }
@@ -226,6 +227,8 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
 
     if (Z_TYPE_P(zv) == IS_INDIRECT) {
         zv = Z_INDIRECT_P(zv);
+    } else if (Z_ISREF_P(zv)) {
+        ZVAL_DEREF(zv);
     }
 
     php_stream_printf(stream TSRMLS_CC, "    \"%s\" : {\n", zval_id);
