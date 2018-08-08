@@ -1,15 +1,46 @@
-2016-03-15 Benoit Jacquemont <benoit.jacquemont@gmail.com>
-* Added frame and symbol information
-* Added analyzers to find path that kept references
+# 1.0.2 Ygramul (2018-08-08)
 
-2016-01-26 Benoit Jacquemont <benoit.jacquemont@gmail.com>
-* Added the object handle to uniquely identify objects
+## Bug fixes
+ - [GITHUB-70](https://github.com/BitOne/php-meminfo/issues/70) Fixes duplication of scalars in PHP 7 when multiple references are used
+ - [GITHUB-68](https://github.com/BitOne/php-meminfo/issues/68) Fixes duplication of objects in PHP 7 when multiple references are used
+ - [GITHUB-67](https://github.com/BitOne/php-meminfo/issues/67) Fixes wrong starting frame in PHP 7, by @mathieuk
+ - [GITHUB-61](https://github.com/BitOne/php-meminfo/issues/61) Removes now obsolete Brew installation instructions
 
-2014-02-15 Benoit Jacquemont <benoit.jacquemont@gmail.com>
-* Cleanup and release of v0.1.0
+## Improvement
+ - [GITHUB-73](https://github.com/BitOne/php-meminfo/issues/73) Adds explanation on memory usage difference, between what is used by objects and what is reported
 
-2014-02-08 Benoit Jacquemont <benoit.jacquemont@gmail.com>
-* Migrating from Google Code to GitHub
+# 1.0.1 Ygramul (2017-11-24)
 
-2011-01-16 Benoit Jacquemont <benoit.jacquemont@gmail.com>
-* Extension creation.
+## Bug fixes
+ - [GITHUB-49](https://github.com/BitOne/php-meminfo/issues/49) Properly escape control character from array index
+
+## Improvements
+ - [GITHUB-48](https://github.com/BitOne/php-meminfo/issues/48) Adds information about Brew installation on MacOS X, by @jdecool
+ - [GITHUB-47](https://github.com/BitOne/php-meminfo/issues/47) Fixes on version support, by @jdecool
+
+# 1.0.0 Ygramul (2017-11-16)
+
+## Improvements
+ - [GITHUB-45](https://github.com/BitOne/php-meminfo/issues/45) Adds PHP 7 support
+ - keeps only the dump method in the extension. From the data gathered by it, all analysis can be done.
+ - summary is now done as a analyzer
+ - doc separation between "usage" and "how to hunt down memory leaks"
+ - tests + travis
+
+# 0.3.0 (2016-03-23)
+
+## Improvements
+ - Remove UI
+ - Adds frame and symbol information
+ - Adds analyzers to find path that kept references
+
+# 0.2.0 (2015-04-30)
+
+## Improvements
+ - Adds an feature to display instances count summary by class.
+
+# 0.1.0 (2014-02-15)
+
+## Improvements
+ - Migrating from Google Code to GitHub
+ - ADDS ABility to display a list of object with Class name and handle
