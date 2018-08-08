@@ -14,16 +14,6 @@ PHP 5.5, 5.6, 7.0, 7.1, and 7.2.
 
 May compiles and works with PHP 5.3 and 5.4 but hasn't been tested with these versions.
 
-Installation
-------------
-On macOS you can install or upgrade the extension using [Homebrew](https://brew.sh)
-
-For exmaple, if you want to install PHP Meminfo for PHP 7.1, run:
-
-```bash
-$ brew install php71-meminfo
-```
-
 Compilation instructions
 ------------------------
 ## Compilation
@@ -215,6 +205,23 @@ Provides aggregated data about memory usage by functions. Far less resource inte
 
 Troubleshooting
 ---------------
+## "A lot of memory usage is reported by the `memory_usage` entry, but the cumulative size of the items in the summary is far lower that the memory usage"
+
+A lot of memory is used internally by the Zend Engine itself to compile PHP files, to run the virtual machine, to execute the garbage collector, etc... Another part of the memory is usually taken by PHP extensions themselves. And the remaining memory usage comes from the PHP data structures from your program.
+
+In some case, several hundred of megabytes can be used internally by some PHP extensions. A good example are the PDO extension and MySQLi extension.
+By default, when executing a SQL query, they will buffer all the results inside the PHP memory:
+http://php.net/manual/en/mysqlinfo.concepts.buffering.php
+
+In case of very large number of results, this will consume a lot of memory, and this memory usage is not caused by the data you have in your objects or array manipulated by your program, but by the way the extension works.
+
+This is only one example, but the same can happen with image manipulation extensions, that will use a lot of memory to transform images.
+
+All the extensions are using the Zend Memory Manager, so that they will not exceed the maximum memory limit set for the PHP process. So their memory usage is included in the information provided by `memory_get_usage()`.
+
+But PHP Meminfo is only able to get information on memory used by the data structure from the PHP program, not from the extensions themselves.
+
+Hence the difference between those numbers, which can be quite big.
 
 ## "Call to undefined function" when calling `meminfo_dump`
 It certainly means the extension is not enabled.
