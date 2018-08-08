@@ -213,6 +213,15 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
 void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * symbol_name, zval * zv, HashTable *visited_items, int *first_element)
 {
     char zval_id[16];
+
+    if (Z_TYPE_P(zv) == IS_INDIRECT) {
+        zv = Z_INDIRECT_P(zv);
+    }
+
+    if (Z_ISREF_P(zv)) {
+        ZVAL_DEREF(zv);
+    }
+
     sprintf(zval_id, "%p", zv);
 
     if (meminfo_visit_item(zval_id, visited_items)) {
@@ -223,12 +232,6 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
         php_stream_printf(stream TSRMLS_CC, "\n    },\n");
     } else {
         *first_element = 0;
-    }
-
-    if (Z_TYPE_P(zv) == IS_INDIRECT) {
-        zv = Z_INDIRECT_P(zv);
-    } else if (Z_ISREF_P(zv)) {
-        ZVAL_DEREF(zv);
     }
 
     php_stream_printf(stream TSRMLS_CC, "    \"%s\" : {\n", zval_id);
