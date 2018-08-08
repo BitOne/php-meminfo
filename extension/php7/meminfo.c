@@ -222,7 +222,11 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
         ZVAL_DEREF(zv);
     }
 
-    sprintf(zval_id, "%p", zv);
+    if (Z_TYPE_P(zv) == IS_OBJECT) {
+        sprintf(zval_id, "%p", zv->value.obj);
+    } else {
+        sprintf(zval_id, "%p", zv);
+    }
 
     if (meminfo_visit_item(zval_id, visited_items)) {
         return;
