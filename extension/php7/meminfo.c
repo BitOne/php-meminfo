@@ -102,6 +102,38 @@ PHP_FUNCTION(meminfo_dump)
     php_stream_printf(stream TSRMLS_CC, "\n    }\n");
     php_stream_printf(stream TSRMLS_CC, "}\n}\n");
 
+
+    {
+        php_stream_printf(stream TSRMLS_CC, "DEBUG objects from object store:\n");
+        zend_object **obj_ptr, **end, *obj;
+        char zval_id[16];
+
+        if (EG(objects_store).top > 1) {
+
+            end = EG(objects_store).object_buckets + 1;
+            obj_ptr = EG(objects_store).object_buckets + EG(objects_store).top;
+
+            do {
+                    obj_ptr--;
+                    obj = *obj_ptr;
+
+                    if (IS_OBJ_VALID(obj)) {
+
+                        sprintf(zval_id, "%p", obj);
+                        if (!meminfo_visit_item(zval_id, visited_items)) {
+                            if (
+                                (!(GC_FLAGS(obj) & IS_OBJ_DESTRUCTOR_CALLED))
+                                &&(!(GC_FLAGS(obj) & IS_OBJ_FREE_CALLED))
+                            ) {
+                                php_stream_printf(stream TSRMLS_CC, "object not accounted by meminfo: %s, %d\n", obj->ce->name->val, obj->handle );
+                            }
+                        }
+
+                    }
+            } while (obj_ptr != end);
+        }
+    }
+
     zend_hash_destroy(visited_items);
     FREE_HASHTABLE(visited_items);
 }
