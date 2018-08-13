@@ -162,6 +162,21 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
 
     zend_hash_internal_pointer_reset_ex(ht, &pos);
     while (zval = zend_hash_get_current_data_ex(ht, &pos)) {
+        char zval_id[16];
+
+        if (Z_TYPE_P(zval) == IS_INDIRECT) {
+            zval = Z_INDIRECT_P(zval);
+        }
+
+        if (Z_ISREF_P(zval)) {
+            ZVAL_DEREF(zval);
+        }
+
+        if (Z_TYPE_P(zval) == IS_OBJECT) {
+            sprintf(zval_id, "%p", zval->value.obj);
+        } else {
+            sprintf(zval_id, "%p", zval);
+        }
 
         if (!first_child) {
             php_stream_printf(stream TSRMLS_CC, ",\n");
@@ -180,7 +195,7 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
 
                     escaped_property_name = meminfo_escape_for_json(property_name);
 
-                    php_stream_printf(stream TSRMLS_CC, "            \"%s\":\"%p\"", ZSTR_VAL(escaped_property_name), zval);
+                    php_stream_printf(stream TSRMLS_CC, "            \"%s\":\"%s\"", ZSTR_VAL(escaped_property_name), zval_id);
 
                     zend_string_release(escaped_property_name);
                 } else {
@@ -188,14 +203,14 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
 
                     escaped_key = meminfo_escape_for_json(ZSTR_VAL(key));
 
-                    php_stream_printf(stream TSRMLS_CC, "            \"%s\":\"%p\"", ZSTR_VAL(escaped_key), zval);
+                    php_stream_printf(stream TSRMLS_CC, "            \"%s\":\"%s\"", ZSTR_VAL(escaped_key), zval_id);
 
                     zend_string_release(escaped_key);
                 }
 
                 break;
             case HASH_KEY_IS_LONG:
-                php_stream_printf(stream TSRMLS_CC, "            \"%ld\":\"%p\"", num_key, zval);
+                php_stream_printf(stream TSRMLS_CC, "            \"%ld\":\"%s\"", num_key, zval_id);
                 break;
         }
 
