@@ -14,6 +14,9 @@ PHP 5.5, 5.6, 7.0, 7.1, and 7.2.
 
 May compiles and works with PHP 5.3 and 5.4 but hasn't been tested with these versions.
 
+**Plese note that the PHP 5 version is now obsoleted and new features will only
+happen in the PHP 7 version of the extension.**
+
 Compilation instructions
 ------------------------
 ## Compilation
