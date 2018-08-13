@@ -1,3 +1,6 @@
+# 1.0.4 Ygramul (2018-08-13)
+ - [GITHUB-75](https://github.com/BitOne/php-meminfo/issues/75) Now goes through static members of classes as well the usual frame execution browsing.
+
 # 1.0.3 Ygramul (2018-08-13)
  - [GITHUB-76](https://github.com/BitOne/php-meminfo/issues/76) Fixes wrong non matching item reference from children, introduced in v1.0.2
 
