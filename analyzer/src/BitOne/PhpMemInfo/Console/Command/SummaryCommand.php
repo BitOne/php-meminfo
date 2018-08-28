@@ -33,6 +33,18 @@ class SummaryCommand extends Command
                 'dump-file',
                 InputArgument::REQUIRED,
                 'PHP Meminfo Dump File in JSON format'
+            )
+            ->addOption(
+                'column-to-sort',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'The column to sort ("count" or "self_size")'
+            )
+            ->addOption(
+                'order-to-sort',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'The order to sort ("asc" or "desc")'
             );
     }
 
@@ -42,6 +54,8 @@ class SummaryCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $dumpFilename = $input->getArgument('dump-file');
+        $columnToSort = $input->getOption('column-to-sort') ? $input->getOption('column-to-sort') : 'count';
+        $orderToSort = $input->getOption('order-to-sort');
 
         $loader = new Loader();
 
@@ -49,7 +63,9 @@ class SummaryCommand extends Command
 
         $summaryCreator = new SummaryCreator($items);
 
-        $summary = $summaryCreator->createSummary();
+        $sorters = ['column' => $columnToSort, 'order' => $orderToSort];
+
+        $summary = $summaryCreator->createSummary($sorters);
 
         $table = new Table($output);
         $this->formatTable($summary, $table);
