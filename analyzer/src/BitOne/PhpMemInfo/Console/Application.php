@@ -5,6 +5,7 @@ namespace BitOne\PhpMemInfo\Console;
 use BitOne\PhpMemInfo\Console\Command\QueryCommand;
 use BitOne\PhpMemInfo\Console\Command\ReferencePathCommand;
 use BitOne\PhpMemInfo\Console\Command\SummaryCommand;
+use BitOne\PhpMemInfo\Console\Command\HeaviestObjectClusterCommand;
 use Symfony\Component\Console\Application as BaseApplication;
 
 /**
@@ -16,10 +17,11 @@ class Application extends BaseApplication
 {
     public function __construct()
     {
-        parent::__construct('PHP Meminfo Dump Analyzer', '0.1');
+        parent::__construct('PHP Meminfo Dump Analyzer', '0.2');
 
         $this->add(new QueryCommand());
         $this->add(new ReferencePathCommand());
         $this->add(new SummaryCommand());
+        $this->add(new HeaviestObjectClusterCommand());
     }
 }

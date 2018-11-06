@@ -2,8 +2,8 @@
 
 namespace BitOne\PhpMemInfo\Analyzer;
 
+use BitOne\PhpMemInfo\Analyzer\Graph\DepthFirstForClusterSize;
 use Fhaculty\Graph\Graph;
-use Graphp\Algorithms\Search\BreadthFirst;
 
 /**
  * Analyzer to compute the inclusive size of items, i.e. the
@@ -38,23 +38,30 @@ class InclusiveSizeCalculator
 
         $items = $this->items;
 
+
         $graph = $this->buildGraph($this->items);
 
         foreach ($items as $itemId => $itemData) {
             $inclusiveSize = 0;
+            $vertex = $graph->getVertex($itemId);
 
             if (isset($itemData['children'])) {
 
-                $search = new BreadthFirst($graph->getVertex($itemId));
+                $search = new DepthFirstForClusterSize($vertex);
                 $reachableVertices = $search->getVertices();
 
                 foreach ($reachableVertices as $reachableVertex) {
-                    $inclusiveSize += $reachableVertex->getAttribute('size');
+                    if (null !== $reachableVertex->getAttribute('inclusive_size')) {
+                        $inclusiveSize += $reachableVertex->getAttribute('inclusive_size');
+                    } else {
+                        $inclusiveSize += $reachableVertex->getAttribute('size');
+                    }
                 }
             } else {
                 $inclusiveSize = $itemData['size'];
             }
             $items[$itemId]['inclusive_size'] = $inclusiveSize;
+            $vertex->setAttribute('inclusive_size', $inclusiveSize);
         }
 
         return $items;
