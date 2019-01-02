@@ -1,0 +1,6 @@
+ARG_ENABLE("meminfo", "Enable Meminfo support", "no");
+
+if (PHP_MEMINFO = "yes") {
+	AC_DEFINE('HAVE_MEMINFO', 1, '[Whether you have Memory Info]');
+	EXTENSION("meminfo", "meminfo.c");
+}
