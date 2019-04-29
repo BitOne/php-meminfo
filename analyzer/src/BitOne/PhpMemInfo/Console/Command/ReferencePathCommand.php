@@ -58,11 +58,12 @@ class ReferencePathCommand extends Command
 
         $output->writeln(sprintf('<info>Found %d paths</info>', count($paths)));
         foreach ($paths as $vertexId => $path) {
-            $output->writeln("<info>Path from $vertexId</info>");
 
             if ($input->hasOption('verbose') && $input->getOption('verbose')) {
+                $output->writeln("<info>Path from $vertexId</info>");
                 $this->renderDetailedPath($output, $path);
             } else {
+                $output->writeln("<info>Path to $vertexId</info>");
                 $this->renderSimplePath($output, $path);
             }
         }
@@ -107,22 +108,39 @@ class ReferencePathCommand extends Command
      */
     protected function renderSimplePath(OutputInterface $output, array $path)
     {
-        $width = 0;
-        foreach ($path as $edge) {
-            $width = max(strlen($edge->getVertexStart()->getId()), $width);
-            $width = max(strlen($edge->getAttribute('name')), $width);
-            $width = max(strlen($edge->getVertexEnd()->getId()), $width);
-        }
+        $pathFromRoot = array_reverse($path);
 
-        foreach ($path as $edge) {
-            $output->writeln(str_pad($edge->getVertexStart()->getId(), $width, ' ', STR_PAD_BOTH));
-            $output->writeln(str_pad('^', $width, ' ', STR_PAD_BOTH));
-            $output->writeln(str_pad('|', $width, ' ', STR_PAD_BOTH));
-            $output->writeln(str_pad($edge->getAttribute('name'), $width, ' ', STR_PAD_BOTH));
-            $output->writeln(str_pad('|', $width, ' ', STR_PAD_BOTH));
-            $output->writeln(str_pad('|', $width, ' ', STR_PAD_BOTH));
+        $indent = 0;
+
+        foreach ($pathFromRoot as $edge) {
+
+            $vertex = $edge->getVertexEnd();
+
+            $data = $vertex->getAttribute('data');
+
+            if ($data['is_root'] === true) {
+                $frame = $data['frame'];
+
+                $output->write(sprintf('(%s)', $frame));
+
+                if ("CLASS_STATIC_MEMBER" !== $frame) {
+                    $output->write('$');
+                }
+                $output->write($data['symbol_name']);
+            }
+
+            if ($data['type'] == 'object') {
+                $output->writeln('');
+                $output->write(str_repeat(' ', $indent));
+                $output->write('->');
+                $output->write($edge->getAttribute('name'));
+            } elseif ($data['type'] == 'array') {
+                $output->write(sprintf('["%s"]', $edge->getAttribute('name')));
+            }
+            $indent +=2;
         }
-        $output->writeln(str_pad($edge->getVertexEnd()->getId(), $width, ' ', STR_PAD_BOTH));
+        $output->writeln('');
+
     }
 
     /**
