@@ -39,7 +39,16 @@ Check array dump from memory
 
     foreach ($myArrayDump['children'] as $key => $child) {
         echo "    Key: ".$key."\n";
-        echo "      Type:".$meminfoData['items'][$child]['type']."\n";
+        echo "      Type:";
+        $type = $meminfoData['items'][$child]['type'];
+        if ('int' === $type) {
+            echo "integer";
+        } elseif ('bool' === $type) {
+            echo "boolean";
+        } else {
+            echo $type;
+        }
+        echo "\n";
         echo "      Is root:".$meminfoData['items'][$child]['is_root']."\n";
     }
 ?>
