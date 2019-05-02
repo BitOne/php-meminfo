@@ -53,7 +53,15 @@ Check scalar dump from memory
     foreach ($scalars as $scalar) {
         echo "Symbol: ".$scalar['symbol_name']."\n";
         echo "  Frame: ".$scalar['frame']."\n";
-        echo "  Type: ".$scalar['type']."\n";
+        echo "  Type: ";
+        if ('int' === $scalar['type']) {
+            echo "integer";
+        } elseif ('bool' === $scalar['type']) {
+            echo "boolean";
+        } else {
+            echo $scalar['type'];
+        }
+        echo "\n";
         echo "  Is root: ".$scalar['is_root']."\n";
     }
 ?>
