@@ -24,6 +24,7 @@ script:
   - ./configure
   - make
   - REPORT_EXIT_STATUS=1 make test
+  - cat tests/*.log
   - cd ../../analyzer
   - composer install
   - vendor/bin/phpspec run
