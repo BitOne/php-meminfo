@@ -21,7 +21,7 @@ class TopSearcher
      * @var int $limit
      * @return array
      */
-    public function createTopChildren(int $limit)
+    public function createTopChildren($limit)
     {
         $top = [];
         for($i = 0; $i < $limit; $i ++) {
@@ -55,7 +55,7 @@ class TopSearcher
      * @var int $limit
      * @return array
      */
-    public function createTopSize(int $limit)
+    public function createTopSize($limit)
     {
         $top = [];
         for($i = 0; $i < $limit; $i ++) {
