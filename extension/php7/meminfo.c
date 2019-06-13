@@ -46,14 +46,13 @@ PHP_FUNCTION(meminfo_dump)
     int first_element = 1;
 
     php_stream *stream;
-    HashTable *visited_items;
+    HashTable visited_items;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zval_stream) == FAILURE) {
         return;
     }
 
-    ALLOC_HASHTABLE(visited_items);
-    zend_hash_init(visited_items, 1000, NULL, NULL, 0);
+    zend_hash_init(&visited_items, 1000, NULL, NULL, 0);
 
     php_stream_from_zval(stream, zval_stream);
     php_stream_printf(stream TSRMLS_CC, "{\n");
@@ -66,14 +65,13 @@ PHP_FUNCTION(meminfo_dump)
     php_stream_printf(stream TSRMLS_CC, "  },\n");
 
     php_stream_printf(stream TSRMLS_CC, "  \"items\": {\n");
-    meminfo_browse_exec_frames(stream,  visited_items, &first_element);
-    meminfo_browse_class_static_members(stream,  visited_items, &first_element);
+    meminfo_browse_exec_frames(stream, &visited_items, &first_element);
+    meminfo_browse_class_static_members(stream, &visited_items, &first_element);
 
     php_stream_printf(stream TSRMLS_CC, "\n    }\n");
     php_stream_printf(stream TSRMLS_CC, "}\n}\n");
 
-    zend_hash_destroy(visited_items);
-    FREE_HASHTABLE(visited_items);
+    zend_hash_destroy(&visited_items);
 }
 
 /**
@@ -193,12 +191,12 @@ int meminfo_visit_item(char * item_identifier, HashTable *visited_items)
 
     zstr_item_identifier = zend_string_init(item_identifier, strlen(item_identifier), 0);
 
-    isset.value.lval = 1;
+    ZVAL_LONG(&isset, 1);
 
     if (zend_hash_exists(visited_items, zstr_item_identifier)) {
         found = 1;
     } else {
-        zend_hash_add_new(visited_items, zstr_item_identifier, &isset);
+        zend_hash_add(visited_items, zstr_item_identifier, &isset);
     }
     zend_string_release(zstr_item_identifier);
 
