@@ -58,7 +58,7 @@ class TopChildrenCommand extends Command
         $top = $topArrayChildrenSearcher->createTopChildren($input->getOption('limit'));
 
         $table = new Table($output);
-        $this->formatTable(array_reverse($top), $table);
+        $this->formatTable($top, $table);
 
         $table->render();
 
@@ -73,12 +73,13 @@ class TopChildrenCommand extends Command
      */
     protected function formatTable(array $top, Table $table)
     {
-        $table->setHeaders(['Num', 'Ref', 'Children']);
+        $table->setHeaders(['Num', 'Item ids', 'Children']);
 
         $rows = [];
+        $num = 1;
 
-        foreach($top as $num => $e) {
-            $rows[] = [$num + 1, $e['ref'], $e['links']];
+        foreach($top as $ref => $children) {
+            $rows[] = [$num ++, $ref, $children];
         }
 
         $table->setRows($rows);

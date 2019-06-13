@@ -24,6 +24,5 @@ class Application extends BaseApplication
         $this->add(new ReferencePathCommand());
         $this->add(new SummaryCommand());
         $this->add(new TopChildrenCommand());
-        $this->add(new TopSizeCommand());
     }
 }

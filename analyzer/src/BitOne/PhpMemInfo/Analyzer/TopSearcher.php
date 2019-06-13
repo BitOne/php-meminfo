@@ -23,62 +23,16 @@ class TopSearcher
      */
     public function createTopChildren($limit)
     {
-        $top = [];
-        for($i = 0; $i < $limit; $i ++) {
-            $top[] = 0;
-        }
+        $index = $top = [];
+
         foreach ($this->items as $key => $item) {
             if (isset($item['children'])) {
-                $links = count($item['children']);
-                for ($i = 0; $i < $limit + 1; $i++) {
-                    if ($i === $limit || $top[$i]['links'] >= $links) {
-                        if ($i !== 0) {
-                            $top[$i - 1] = [
-                                'links' => $links,
-                                'ref' => $key
-                            ];
-                        }
-                        break;
-                    } elseif ($i !== 0) {
-                        $top[$i - 1] = $top[$i];
-                    }
-                }
+                $index[$key] = count($item['children']);
             }
         }
 
-        return $top;
-    }
+        arsort($index);
 
-    /**
-     * Create a list of the largest objects
-     *
-     * @var int $limit
-     * @return array
-     */
-    public function createTopSize($limit)
-    {
-        $top = [];
-        for($i = 0; $i < $limit; $i ++) {
-            $top[] = 0;
-        }
-        foreach ($this->items as $key => $item) {
-            if (isset($item['size'])) {
-                for ($i = 0; $i < $limit + 1; $i++) {
-                    if ($i === $limit || $top[$i]['size'] >= $item['size']) {
-                        if ($i !== 0) {
-                            $top[$i - 1] = [
-                                'size' => $item['size'],
-                                'ref' => $key
-                            ];
-                        }
-                        break;
-                    } elseif ($i !== 0) {
-                        $top[$i - 1] = $top[$i];
-                    }
-                }
-            }
-        }
-
-        return $top;
+        return array_slice($index, 0, $limit);
     }
 }

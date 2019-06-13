@@ -81,6 +81,32 @@ $ bin/analyzer summary /tmp/my_dump_file.json
 +----------+-----------------+-----------------------------+
 ```
 
+## Displaying a list of objects with the largest number of children
+```bash
+$ bin/analyzer top-children [options] [--] <dump-file>
+
+Arguments:
+  dump-file             PHP Meminfo Dump File in JSON format
+
+Options:
+  -l, --limit[=LIMIT]   limit [default: 5]
+```
+
+### Example
+```bash
+$ bin/analyzer top-children /tmp/my_dump_file.json
++-----+----------------+----------+
+| Num | Item ids       | Children |
++-----+----------------+----------+
+| 1   | 0x7ffff4e22fe0 | 1000000  |
+| 2   | 0x7fffe780e5c8 | 11606    |
+| 3   | 0x7fffe9714ef0 | 11602    |
+| 4   | 0x7fffeab63ca0 | 3605     |
+| 5   | 0x7fffd3161400 | 2400     |
++-----+----------------+----------+
+
+```
+
 ## Querying the memory dump to find specific objects
 ```bash
 $ bin/analyzer query [options] [--] <dump-file>

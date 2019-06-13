@@ -13,51 +13,6 @@ class TopSearcherSpec extends ObjectBehavior
         $this->shouldHaveType('BitOne\PhpMemInfo\Analyzer\TopSearcher');
     }
 
-    function it_is_top_size()
-    {
-        $this->beConstructedWith([
-            "0x7fb321a94050" => [
-                "type" => "string",
-                "size" => "29"
-            ],
-            "0x7fb321a94080" => [
-                "type" => "string",
-                "size" => "29"
-            ],
-            "0x7fb321a94378" => [
-                "type" => "array",
-                "size" => "96"
-            ],
-            "0x7fb321a94108" => [
-                "type" => "string",
-                "size" => "37"
-            ],
-            "0x7fb321a941e0" => [
-                "type" => "integer",
-                "size" => "24"
-            ],
-            "0x7fb321a94268" => [
-                "type" => "integer",
-                "size" => "24"
-            ]
-        ]);
-
-        $this->createTopSize(3)->shouldReturn([
-            [
-                "size" => "29",
-                "ref"  => "0x7fb321a94050"
-            ],
-            [
-                "size" => "37",
-                "ref"  => "0x7fb321a94108"
-            ],
-            [
-                "size" => "96",
-                "ref"  => "0x7fb321a94378"
-            ]
-        ]);
-    }
-
     function it_is_top_children()
     {
         $this->beConstructedWith([
@@ -82,18 +37,9 @@ class TopSearcherSpec extends ObjectBehavior
         ]);
 
         $this->createTopChildren(3)->shouldReturn([
-            [
-                "links" => 6,
-                "ref"  => "0x7fb321a94080"
-            ],
-            [
-                "links" => 7,
-                "ref"  => "0x7fb321a941e0"
-            ],
-            [
-                "links" => 12,
-                "ref"  => "0x7fb321a94378"
-            ]
+            "0x7fb321a94378" => 12,
+            "0x7fb321a941e0" => 7,
+            "0x7fb321a94080" => 6
         ]);
     }
 }
