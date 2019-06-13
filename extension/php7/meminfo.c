@@ -43,8 +43,6 @@ PHP_FUNCTION(meminfo_dump)
 {
     zval *zval_stream;
 
-    char header[1024];
-
     int first_element = 1;
 
     php_stream *stream;
@@ -84,19 +82,13 @@ PHP_FUNCTION(meminfo_dump)
 void meminfo_browse_exec_frames(php_stream *stream,  HashTable *visited_items, int *first_element)
 {
     zend_execute_data *exec_frame, *prev_frame;
-    zend_execute_data *init_exec_frame;
-    HashTable *global_symbol_table;
-    HashTable *symbol_table;
     zend_array *p_symbol_table;
 
     exec_frame = EG(current_execute_data);
-    init_exec_frame = exec_frame;
 
     char frame_label[500];
 
     while (exec_frame) {
-        int i;
-        zend_op_array * op_array;
         // Switch the active frame to the current browsed one and rebuild the symbol table
         // to get it right
         EG(current_execute_data) = exec_frame;
@@ -136,7 +128,7 @@ void meminfo_browse_class_static_members(php_stream *stream,  HashTable *visited
     zval * prop;
 
     zend_hash_internal_pointer_reset_ex(CG(class_table), &ce_pos);
-    while (class_entry = zend_hash_get_current_data_ptr_ex(CG(class_table), &ce_pos)) {
+    while ((class_entry = zend_hash_get_current_data_ptr_ex(CG(class_table), &ce_pos)) != NULL) {
 
         if (class_entry->static_members_table) {
 
@@ -144,7 +136,7 @@ void meminfo_browse_class_static_members(php_stream *stream,  HashTable *visited
 
             zend_hash_internal_pointer_reset_ex(properties_info, &prop_pos);
 
-            while (prop_info = zend_hash_get_current_data_ptr_ex(properties_info, &prop_pos)) {
+            while ((prop_info = zend_hash_get_current_data_ptr_ex(properties_info, &prop_pos)) != NULL) {
 
                 if (prop_info->flags & ZEND_ACC_STATIC) {
                     snprintf(frame_label, sizeof(frame_label), "<CLASS_STATIC_MEMBER>");
@@ -180,11 +172,10 @@ void meminfo_browse_zvals_from_symbol_table(php_stream *stream, char* frame_labe
 
     zend_string *key;
     ulong index;
-    uint key_len;
 
     zend_hash_internal_pointer_reset_ex(p_symbol_table, &pos);
 
-    while (zval_to_dump = zend_hash_get_current_data_ex(p_symbol_table, &pos)) {
+    while ((zval_to_dump = zend_hash_get_current_data_ex(p_symbol_table, &pos)) != NULL) {
 
         zend_hash_get_current_key_ex(p_symbol_table, &key, &index, &pos);
 
@@ -221,14 +212,13 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
     zend_string *key;
     HashPosition pos;
     zend_ulong num_key;
-    int i;
 
     int first_child = 1;
 
     php_stream_printf(stream TSRMLS_CC, "        \"children\" : {\n");
 
     zend_hash_internal_pointer_reset_ex(ht, &pos);
-    while (zval = zend_hash_get_current_data_ex(ht, &pos)) {
+    while ((zval = zend_hash_get_current_data_ex(ht, &pos)) != NULL) {
         char zval_id[16];
 
         if (Z_TYPE_P(zval) == IS_INDIRECT) {
@@ -286,7 +276,7 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
     php_stream_printf(stream TSRMLS_CC, "\n        }\n");
 
     zend_hash_internal_pointer_reset_ex(ht, &pos);
-    while (zval = zend_hash_get_current_data_ex(ht, &pos)) {
+    while ((zval = zend_hash_get_current_data_ex(ht, &pos)) != NULL) {
         meminfo_zval_dump(stream, NULL, NULL, zval, visited_items, first_element);
         zend_hash_move_forward_ex(ht, &pos);
     }
@@ -501,7 +491,7 @@ void meminfo_build_frame_label(char* frame_label, int frame_label_len, zend_exec
  */
 zend_string * meminfo_escape_for_json(const char *s)
 {
-    int new_str_len, i;
+    int i;
     char unescaped_char[2];
     char escaped_char[7]; // \uxxxx format
     zend_string *s1, *s2, *s3 = NULL;
