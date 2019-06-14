@@ -228,7 +228,7 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
         }
 
         if (Z_TYPE_P(zval) == IS_OBJECT) {
-            sprintf(zval_id, "%p", zval->value.obj);
+            sprintf(zval_id, "%p", Z_OBJ_P(zval));
         } else {
             sprintf(zval_id, "%p", zval);
         }
@@ -293,7 +293,7 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
     }
 
     if (Z_TYPE_P(zv) == IS_OBJECT) {
-        sprintf(zval_identifier, "%p", zv->value.obj);
+        sprintf(zval_identifier, "%p", Z_OBJ_P(zv));
     } else {
         sprintf(zval_identifier, "%p", zv);
     }
@@ -342,14 +342,14 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
 
         properties = NULL;
 
-        escaped_class_name = meminfo_escape_for_json(ZSTR_VAL(zv->value.obj->ce->name));
+        escaped_class_name = meminfo_escape_for_json(ZSTR_VAL(Z_OBJCE_P(zv)->name));
 
         php_stream_printf(stream TSRMLS_CC, ",\n");
         php_stream_printf(stream TSRMLS_CC, "        \"class\" : \"%s\",\n", ZSTR_VAL(escaped_class_name));
 
         zend_string_release(escaped_class_name);
 
-        php_stream_printf(stream TSRMLS_CC, "        \"object_handle\" : \"%d\",\n", zv->value.obj->handle);
+        php_stream_printf(stream TSRMLS_CC, "        \"object_handle\" : \"%d\",\n", Z_OBJ_HANDLE_P(zv));
 
         properties = Z_OBJDEBUG_P(zv, is_temp);
 
@@ -363,7 +363,7 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
         }
     } else if (Z_TYPE_P(zv) == IS_ARRAY) {
         php_stream_printf(stream TSRMLS_CC, ",\n");
-        meminfo_hash_dump(stream, zv->value.arr, 0, visited_items, first_element);
+        meminfo_hash_dump(stream, Z_ARRVAL_P(zv), 0, visited_items, first_element);
     } else {
         php_stream_printf(stream TSRMLS_CC, "\n");
     }
@@ -384,7 +384,7 @@ zend_ulong meminfo_get_element_size(zval *zv)
 
     switch (Z_TYPE_P(zv)) {
         case IS_STRING:
-            size += zv->value.str->len;
+            size += Z_STRLEN_P(zv);
             break;
 
         // TODO: add size of the indexes
