@@ -91,6 +91,10 @@ void meminfo_browse_exec_frames(php_stream *stream,  HashTable *visited_items, i
         // to get it right
         EG(current_execute_data) = exec_frame;
         p_symbol_table = zend_rebuild_symbol_table();
+        if (p_symbol_table == NULL) {
+            exec_frame = exec_frame->prev_execute_data;
+            continue;
+        }
 
         // Once we have the symbol table, switch to the prev frame to get the right frame name
         prev_frame = exec_frame->prev_execute_data;
