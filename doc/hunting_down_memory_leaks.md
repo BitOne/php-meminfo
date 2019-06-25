@@ -66,8 +66,24 @@ more apparent as the number of items leaking will be the one increasing over tim
 
 Once we have a good idea of the kind of items that are leaking, let's go deeper
 and try to find why there are still in memory.
+## 3. Finding objects with the most children
+```bash
+$ bin/analyzer top-children /tmp/my_dump_file.json
++-----+----------------+----------+
+| Num | Item ids       | Children |
++-----+----------------+----------+
+| 1   | 0x7ffff4e22fe0 | 1000000  |
+| 2   | 0x7fffe780e5c8 | 11606    |
+| 3   | 0x7fffe9714ef0 | 11602    |
+| 4   | 0x7fffeab63ca0 | 3605     |
+| 5   | 0x7fffd3161400 | 2400     |
++-----+----------------+----------+
+```
+Perhaps some array accumulates logs or caches something. This command helps you to find items with many children.
+But be careful this command does not summarize multi-dimensional arrays.
+For resolve ID filed see the next paragraph - "Finding references to the leaked object".
 
-### 3. Finding a sample of a leaked object
+## 4. Finding a sample of a leaked object
 So now, we know of what class are the object leaking. It can be multiple classes in the case of
 objects composed with multiple other objects.
 
@@ -116,7 +132,7 @@ We have a list of ten items matching our query (use the `-l` option to get more)
 So let's take one of them, for example `0x7f94a1877068`, and find out what are
 the references that are still alive and pointing to it.
 
-## 4. Finding references to the leaked object
+## 5. Finding references to the leaked object
 
 We know this object is still in memory, and we know he is not linked directly
 to a variable (not root). So it means another item (like an array or an object)
