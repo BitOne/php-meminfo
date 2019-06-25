@@ -1,6 +1,7 @@
 #ifndef PHP_MEMINFO_H
 #define PHP_MEMINFO_H 1
 
+extern zend_module_entry meminfo_module_entry;
 #define phpext_meminfo_ptr &meminfo_module_entry
 
 #define MEMINFO_NAME "PHP Meminfo"
