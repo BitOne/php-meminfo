@@ -2,8 +2,8 @@
 
 namespace BitOne\PhpMemInfo\Console\Command;
 
+use BitOne\PhpMemInfo\Analyzer\SummaryDiffer;
 use BitOne\PhpMemInfo\Loader;
-use BitOne\PhpMemInfo\Analyzer\SummaryCreator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Helper\Table;
@@ -14,9 +14,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 
 /**
- * Class DiffCommand
+ * Command to list the differences between two memory dumps.
  *
  * @author  oliver de Cramer <oliverde8@gmail.com>
+ * @author  Axel Ducret <axel.ducret@gmail.com>
  * @license   http://opensource.org/licenses/MIT MIT
  */
 class DiffCommand extends Command
@@ -64,6 +65,12 @@ class DiffCommand extends Command
                 InputOption::VALUE_OPTIONAL,
                 $sortDescription,
                 self::SORT_DIFF_COUNT
+            )
+            ->addOption(
+                'only-diff',
+                'd',
+                InputOption::VALUE_NONE,
+                'If set, only the rows with actual differences will be showed'
             );
     }
 
@@ -75,20 +82,18 @@ class DiffCommand extends Command
         $firstFilename = $input->getArgument('first-file');
         $secondFilename = $input->getArgument('second-file');
         $sort = $input->getOption('sort');
+        $onlyDiff = $input->getOption('only-diff');
 
         $loader = new Loader();
 
         $firstItems = $loader->load($firstFilename);
         $secondItems = $loader->load($secondFilename);
 
-        $firstSummary = new SummaryCreator($firstItems);
-        $secondSummary = new SummaryCreator($secondItems);
-
-        $firstSummary = $firstSummary->createSummary();
-        $secondSummary = $secondSummary->createSummary();
+        $summaryDiffer = new SummaryDiffer($firstItems, $secondItems);
+        $rows = $summaryDiffer->generateDiff();
 
         $table = new Table($output);
-        $this->formatTable($firstSummary, $secondSummary, $table, $sort);
+        $this->formatTable($rows, $table, $sort, $onlyDiff);
 
         $table->render();
 
@@ -98,38 +103,23 @@ class DiffCommand extends Command
     /**
      * Format data into a detailed table.
      *
-     * @param array  $firstSummary
-     * @param array  $secondSummary
+     * @param array  $rows
      * @param Table  $table
      * @param string $sort
+     * @param bool   $onlyDiff
      */
-    protected function formatTable(array $firstSummary, array $secondSummary, Table $table, $sort)
+    protected function formatTable(array $rows, Table $table, $sort, $onlyDiff)
     {
         $table->setHeaders(['Type', 'First Instances Count', 'First Cumulated Self Size (bytes)', 'Second Instances Diff', 'Second Size Diff (bytes)']);
 
-        $rows = [];
-        foreach($secondSummary as $type => $stats) {
-            $countDiff = $stats['count'];
-            $sizeDiff = $stats['self_size'];
-
-            if (isset($firstSummary[$type])) {
-                $countDiff = $stats['count'] - $firstSummary[$type]['count'];
-                $sizeDiff = $stats['self_size'] - $firstSummary[$type]['self_size'];
-            }
-
-            $rows[] = [$type, $stats['count'], $stats['self_size'], $this->formatDiffValue($countDiff), $this->formatDiffValue($sizeDiff)];
-        }
-
-        // Let's not forget all elements completely removed from memory.
-        foreach ($firstSummary as $type => $stats) {
-            if (!isset($secondSummary[$type])) {
-                $countDiff = -$stats['count'];
-                $sizeDiff = -$stats['self_size'];
-                $rows[] = [$type, $stats['count'], $stats['self_size'], $this->formatDiffValue($countDiff), $this->formatDiffValue($sizeDiff)];
-            }
+        if ($onlyDiff) {
+            $rows = array_filter($rows, function ($row) {
+                return $row[3] !== '0';
+            });
         }
 
         $this->sortTable($rows, $sort);
+
         $table->setRows($rows);
     }
 
@@ -152,21 +142,7 @@ class DiffCommand extends Command
         $sortIndex = $this->sorts[$sort];
 
         usort($rows, function($item1, $item2) use ($sortIndex) {
-            return abs(str_replace('+', '', $item1[$sortIndex])) <= abs(str_replace('+', '', $item2[$sortIndex]));
+            return str_replace('+', '', $item1[$sortIndex]) <= str_replace('+', '', $item2[$sortIndex]);
         });
-    }
-
-    /**
-     * Format diff value for display
-     *
-     * @param int $value
-     *
-     * @return string
-     */
-    protected function formatDiffValue($value)
-    {
-        if ($value > 0) {
-            return '+' . $value;
-        }
     }
 }
