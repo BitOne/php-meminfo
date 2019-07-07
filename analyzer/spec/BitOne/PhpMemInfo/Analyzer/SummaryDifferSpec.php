@@ -94,6 +94,16 @@ class SummaryDifferSpec extends ObjectBehavior
                 "type"  => "object",
                 "class" => "MyClassC",
                 "size"  => "56"
+            ],
+            "0x7fd04f5d4bf9" => [
+                "type"  => "object",
+                "class" => "MyClassC",
+                "size"  => "56"
+            ],
+            "0x7fd04f5d4bfa" => [
+                "type"  => "object",
+                "class" => "MyClassC",
+                "size"  => "56"
             ]
         ];
 
@@ -101,8 +111,8 @@ class SummaryDifferSpec extends ObjectBehavior
 
         $this->generateDiff()->shouldReturn([
             ['MyClassA', 2, 112, '+2', '+42'],
+            ['MyClassC', 0, 0, '+3', '+168'],
             ['integer', 2, 48, '0', '0'],
-            ['MyClassC', 0, 0, '+1', '+56'],
             ['string', 4, 140, '-3', '-116'],
             ['MyClassB', 1, 56, '-1', '-56'],
         ]);
