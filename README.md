@@ -235,11 +235,12 @@ Options:
                            - s : Sort by size
                            - dc : Sort by the count differene
                            - ds : Sort by the size difference
+    -d, --only-diff       If set, objects for which count is the same in both dumps will not be showed
 ```
 
-### Exemple 
+### Example 
 
-Fallowing exemple displays the diff sorting them by difference in size.
+Following example displays the diff sorting them by difference in size.
 
 ```bash
 $ bin/analyzer diff eXpansion-mem-dump-2018-01-06T11\:37\:38+0000.json eXpansion-mem-dump-2018-01-06T12\:04\:23+0000.json  -sds
