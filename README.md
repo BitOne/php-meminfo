@@ -4,7 +4,7 @@ PHP Meminfo is a PHP extension that gives you insights on the PHP memory content
 
 Its main goal is to help you understand memory leaks: by looking at data present in memory, you can better understand your application behaviour.
 
-One of the main source of inspiration for this tool is the Java jmap tool with the -histo option (see `man jmap`).
+One of the main sources of inspiration for this tool is the Java jmap tool with the -histo option (see `man jmap`).
 
 ![Travis CI Results](https://travis-ci.org/BitOne/php-meminfo.svg?branch=master)
 
@@ -12,9 +12,9 @@ Compatibility
 -------------
 PHP 5.5, 5.6, 7.0, 7.1, 7.2 and 7.3.
 
-May compiles and works with PHP 5.3 and 5.4 but hasn't been tested with these versions.
+May compile and work with PHP 5.3 and 5.4 but hasn't been tested with these versions.
 
-**Plese note that the PHP 5 version is now obsoleted and new features will only
+**Please note that the PHP 5 version is now obsoleted and new features will only
 happen in the PHP 7 version of the extension.**
 
 Compilation instructions
@@ -56,7 +56,7 @@ meminfo_dump(fopen('/tmp/my_dump_file.json', 'w'));
 
 This function generates a dump of the PHP memory in a JSON format. This dump can be later analyzed by the provided analyzers.
 
-This functions takes a stream handle as a parameter. It allows you to specify a file (ex `fopen('/tmp/file.txt', 'w')`, as well as to use standard output with the `php://stdout` stream.
+This function takes a stream handle as a parameter. It allows you to specify a file (ex `fopen('/tmp/file.txt', 'w')`, as well as to use standard output with the `php://stdout` stream.
 
 ## Displaying a summary of items in memory
 ```bash
@@ -146,11 +146,11 @@ $ bin/analyzer query -v -f "class=MyClassA" -f "is_root=0" /tmp/php_mem_dump.jso
 ```
 
 ## Displaying the reference path
-The reference path is the path between a specific item in memory (identified by it's
+The reference path is the path between a specific item in memory (identified by its
 pointer address) and all the intermediary items up to the one item that is attached
 to a variable still alive in the program.
 
-This path shows who are the items responsible for the memory leak of the specific item
+This path shows which items are responsible for the memory leak of the specific item
 provided.
 
 ```bash
@@ -219,8 +219,8 @@ Path from 0x7f94a1856260
 +---------------------------+
 ```
 
-A worflow to find and understand memory leak by using PHP Meminfo
------------------------------------------------------------------
+A workflow to find and understand memory leaks using PHP Meminfo
+----------------------------------------------------------------
 
 [Hunting down memory leaks](doc/hunting_down_memory_leaks.md)
 
@@ -234,12 +234,12 @@ Provides aggregated data about memory usage by functions. Far less resource inte
 
 Troubleshooting
 ---------------
-## "A lot of memory usage is reported by the `memory_usage` entry, but the cumulative size of the items in the summary is far lower that the memory usage"
+## "A lot of memory usage is reported by the `memory_usage` entry, but the cumulative size of the items in the summary is far lower than the memory usage"
 
 A lot of memory is used internally by the Zend Engine itself to compile PHP files, to run the virtual machine, to execute the garbage collector, etc... Another part of the memory is usually taken by PHP extensions themselves. And the remaining memory usage comes from the PHP data structures from your program.
 
-In some case, several hundred of megabytes can be used internally by some PHP extensions. A good example are the PDO extension and MySQLi extension.
-By default, when executing a SQL query, they will buffer all the results inside the PHP memory:
+In some cases, several hundred megabytes can be used internally by some PHP extensions. Examples are the PDO extension and MySQLi extension.
+By default, when executing a SQL query they will buffer all the results inside the PHP memory:
 http://php.net/manual/en/mysqlinfo.concepts.buffering.php
 
 In case of very large number of results, this will consume a lot of memory, and this memory usage is not caused by the data you have in your objects or array manipulated by your program, but by the way the extension works.
@@ -253,7 +253,7 @@ But PHP Meminfo is only able to get information on memory used by the data struc
 Hence the difference between those numbers, which can be quite big.
 
 ## "Call to undefined function" when calling `meminfo_dump`
-It certainly means the extension is not enabled.
+This means the extension is not enabled.
 
 Check the PHP Info output and look for the MemInfo data.
 
@@ -261,9 +261,9 @@ To see the PHP Info output, just create a page calling the `phpinfo();` function
 
 ## Why most tests are "skipped"?
 
-While doing a `make test`, some test will need JSON capabilities. But The
+While doing a `make test`, some tests will need JSON capabilities. But the
 compilation system generates a clean env by removing all configuration
-directives that load extension.
+directives that load extensions.
 So if JSON capabilites are packaged as a separate extension (instead of
 being compiled directly in the PHP runtime), the tests will be skipped.
 
@@ -274,7 +274,7 @@ command, by providing the `php` executable:
 $ TEST_PHP_EXECUTABLE=/usr/bin/php php run-tests.php
 
 ```
-In this case, your tests will run with your local PHP configuration,
+In this case your tests will run with your local PHP configuration,
 including the loading of the JSON extension.
 
 Credits
