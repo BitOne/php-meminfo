@@ -221,7 +221,7 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
 
     zend_hash_internal_pointer_reset_ex(ht, &pos);
     while ((zval = zend_hash_get_current_data_ex(ht, &pos)) != NULL) {
-        char zval_id[16];
+        char zval_id[17];
 
         if (Z_TYPE_P(zval) == IS_INDIRECT) {
             zval = Z_INDIRECT_P(zval);
@@ -286,7 +286,7 @@ void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, H
 
 void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * symbol_name, zval * zv, HashTable *visited_items, int *first_element)
 {
-    char zval_identifier[16];
+    char zval_identifier[17];
 
     if (Z_TYPE_P(zv) == IS_INDIRECT) {
         zv = Z_INDIRECT_P(zv);
