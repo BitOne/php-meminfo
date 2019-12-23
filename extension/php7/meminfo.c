@@ -129,7 +129,7 @@ void meminfo_browse_class_static_members(php_stream *stream,  HashTable *visited
     while ((class_entry = zend_hash_get_current_data_ptr_ex(CG(class_table), &ce_pos)) != NULL) {
 
 #if PHP_VERSION_ID >= 70400
-        if (CE_STATIC_MEMBERS(class_entry)) {
+        if (class_entry->default_static_members_count > 0 && CE_STATIC_MEMBERS(class_entry)) {
 #else
         if (class_entry->static_members_table) {
 #endif
