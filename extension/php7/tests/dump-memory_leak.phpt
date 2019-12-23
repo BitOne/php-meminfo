@@ -4,7 +4,7 @@ meminfo_dump check there's no memory leak
 <?php
     require dirname(__FILE__) . '/fixtures/books.php';
 
-    $rFilePointer = fopen('/dev/null', 'rw');
+    $rFilePointer = fopen('/dev/null', 'w');
 
     $arrayTest = [
         'itemBool' => true,
