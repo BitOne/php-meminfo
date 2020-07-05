@@ -90,21 +90,21 @@ void meminfo_browse_exec_frames(php_stream *stream,  HashTable *visited_items, i
         // Switch the active frame to the current browsed one and rebuild the symbol table
         // to get it right
         EG(current_execute_data) = exec_frame;
-        p_symbol_table = zend_rebuild_symbol_table();
+
+        // copy variables from ex->func->op_array.vars into the symbol table for the last called *user* function
+        // therefore it does necessary returns the symbol table of the current frame 
+        zend_rebuild_symbol_table();
+
+        p_symbol_table = exec_frame->symbol_table;
         if (p_symbol_table == NULL) {
             exec_frame = exec_frame->prev_execute_data;
             continue;
         }
 
-        // Once we have the symbol table, switch to the prev frame to get the right frame name
-        prev_frame = exec_frame->prev_execute_data;
-
-        if (prev_frame) {
-            if (prev_frame->prev_execute_data) {
-                meminfo_build_frame_label(frame_label, sizeof(frame_label), prev_frame);
-            } else {
-                snprintf(frame_label, sizeof(frame_label), "<GLOBAL>");
-            }
+        if (exec_frame->prev_execute_data) {
+            meminfo_build_frame_label(frame_label, sizeof(frame_label), exec_frame);
+        } else {
+            snprintf(frame_label, sizeof(frame_label), "<GLOBAL>");
         }
 
         meminfo_browse_zvals_from_symbol_table(stream, frame_label, p_symbol_table, visited_items, first_element);
