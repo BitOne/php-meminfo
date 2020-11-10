@@ -12,9 +12,9 @@ Compatibility
 -------------
 PHP 5.5, 5.6, 7.0, 7.1, 7.2 and 7.3.
 
-May compiles and works with PHP 5.3 and 5.4 but hasn't been tested with these versions.
+May compile and work with PHP 5.3 and 5.4 but hasn't been tested with these versions.
 
-**Plese note that the PHP 5 version is now obsoleted and new features will only
+**Please note that the PHP 5 version is now obsoleted and new features will only
 happen in the PHP 7 version of the extension.**
 
 Compilation instructions
@@ -56,7 +56,7 @@ meminfo_dump(fopen('/tmp/my_dump_file.json', 'w'));
 
 This function generates a dump of the PHP memory in a JSON format. This dump can be later analyzed by the provided analyzers.
 
-This functions takes a stream handle as a parameter. It allows you to specify a file (ex `fopen('/tmp/file.txt', 'w')`, as well as to use standard output with the `php://stdout` stream.
+This function takes a stream handle as a parameter. It allows you to specify a file (ex `fopen('/tmp/file.txt', 'w')`, as well as to use standard output with the `php://stdout` stream.
 
 ## Displaying a summary of items in memory
 ```bash
@@ -146,7 +146,7 @@ $ bin/analyzer query -v -f "class=MyClassA" -f "is_root=0" /tmp/php_mem_dump.jso
 ```
 
 ## Displaying the reference path
-The reference path is the path between a specific item in memory (identified by it's
+The reference path is the path between a specific item in memory (identified by its
 pointer address) and all the intermediary items up to the one item that is attached
 to a variable still alive in the program.
 
@@ -263,7 +263,7 @@ To see the PHP Info output, just create a page calling the `phpinfo();` function
 
 While doing a `make test`, some test will need JSON capabilities. But The
 compilation system generates a clean env by removing all configuration
-directives that load extension.
+directives that load extensions.
 So if JSON capabilites are packaged as a separate extension (instead of
 being compiled directly in the PHP runtime), the tests will be skipped.
 
