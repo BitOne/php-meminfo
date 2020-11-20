@@ -58,10 +58,10 @@ PHP_FUNCTION(meminfo_dump)
     php_stream_printf(stream TSRMLS_CC, "{\n");
 
     php_stream_printf(stream TSRMLS_CC, "  \"header\" : {\n");
-    php_stream_printf(stream TSRMLS_CC, "    \"memory_usage\" : %d,\n", zend_memory_usage(0));
-    php_stream_printf(stream TSRMLS_CC, "    \"memory_usage_real\" : %d,\n", zend_memory_usage(1));
-    php_stream_printf(stream TSRMLS_CC, "    \"peak_memory_usage\" : %d,\n", zend_memory_peak_usage(0));
-    php_stream_printf(stream TSRMLS_CC, "    \"peak_memory_usage_real\" : %d\n", zend_memory_peak_usage(1));
+    php_stream_printf(stream TSRMLS_CC, "    \"memory_usage\" : %zd,\n", zend_memory_usage(0));
+    php_stream_printf(stream TSRMLS_CC, "    \"memory_usage_real\" : %zd,\n", zend_memory_usage(1));
+    php_stream_printf(stream TSRMLS_CC, "    \"peak_memory_usage\" : %zd,\n", zend_memory_peak_usage(0));
+    php_stream_printf(stream TSRMLS_CC, "    \"peak_memory_usage_real\" : %zd\n", zend_memory_peak_usage(1));
     php_stream_printf(stream TSRMLS_CC, "  },\n");
 
     php_stream_printf(stream TSRMLS_CC, "  \"items\": {\n");
@@ -132,7 +132,11 @@ void meminfo_browse_class_static_members(php_stream *stream,  HashTable *visited
     zend_hash_internal_pointer_reset_ex(CG(class_table), &ce_pos);
     while ((class_entry = zend_hash_get_current_data_ptr_ex(CG(class_table), &ce_pos)) != NULL) {
 
+#if PHP_VERSION_ID >= 70400
+        if (class_entry->default_static_members_count > 0 && CE_STATIC_MEMBERS(class_entry)) {
+#else
         if (class_entry->static_members_table) {
+#endif
 
             HashTable *properties_info = &(class_entry->properties_info);
 
@@ -142,7 +146,11 @@ void meminfo_browse_class_static_members(php_stream *stream,  HashTable *visited
 
                 if (prop_info->flags & ZEND_ACC_STATIC) {
                     snprintf(frame_label, sizeof(frame_label), "<CLASS_STATIC_MEMBER>");
+#if PHP_VERSION_ID >= 70400
+                    prop = CE_STATIC_MEMBERS(class_entry) + prop_info->offset;
+#else
                     prop = &class_entry->static_members_table[prop_info->offset];
+#endif
 
                     zend_unmangle_property_name(prop_info->name, &class_name, &prop_name);
 
@@ -341,7 +349,6 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
 
     if (Z_TYPE_P(zv) == IS_OBJECT) {
         HashTable *properties;
-        int is_temp;
         zend_string * escaped_class_name;
 
         properties = NULL;
@@ -355,15 +362,24 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
 
         php_stream_printf(stream TSRMLS_CC, "        \"object_handle\" : \"%d\",\n", Z_OBJ_HANDLE_P(zv));
 
+#if PHP_VERSION_ID >= 70400
+        properties = zend_get_properties_for(zv, ZEND_PROP_PURPOSE_DEBUG);
+#else
+        int is_temp;
         properties = Z_OBJDEBUG_P(zv, is_temp);
+#endif
 
         if (properties != NULL) {
             meminfo_hash_dump(stream, properties, 1, visited_items, first_element);
 
+#if PHP_VERSION_ID >= 70400
+            zend_release_properties(properties);
+#else
             if (is_temp) {
                 zend_hash_destroy(properties);
                 efree(properties);
             }
+#endif
         }
     } else if (Z_TYPE_P(zv) == IS_ARRAY) {
         php_stream_printf(stream TSRMLS_CC, ",\n");
