@@ -10,7 +10,7 @@ One of the main sources of inspiration for this tool is the Java jmap tool with 
 
 Compatibility
 -------------
-PHP 5.5, 5.6, 7.0, 7.1, 7.2 and 7.3.
+PHP 5.6, 7.0, 7.1, 7.2, 7.3 and 7.4.
 
 May compile and work with PHP 5.3 and 5.4 but hasn't been tested with these versions.
 
