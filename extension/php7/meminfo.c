@@ -182,7 +182,7 @@ void meminfo_browse_zvals_from_symbol_table(php_stream *stream, char* frame_labe
     HashPosition pos;
 
     zend_string *key;
-    ulong index;
+    zend_long index;
 
     zend_hash_internal_pointer_reset_ex(p_symbol_table, &pos);
 
