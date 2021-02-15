@@ -12,12 +12,8 @@ php:
   - nightly
 
 matrix:
-  include:
-    - php: 5.5
-      dist: trusty
   allow_failures:
     - php: nightly
-    - php: 7.4
 
 before_script:
   - phpenv config-rm xdebug.ini
