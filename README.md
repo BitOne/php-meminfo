@@ -10,17 +10,17 @@ One of the main sources of inspiration for this tool is the Java jmap tool with 
 
 Compatibility
 -------------
-PHP 5.6, 7.0, 7.1, 7.2, 7.3 and 7.4.
+PHP 5.6, 7.x, 8.0.
 
 May compile and work with PHP 5.3 and 5.4 but hasn't been tested with these versions.
 
 **Please note that the PHP 5 version is now obsoleted and new features will only
-happen in the PHP 7 version of the extension.**
+happen in the PHP 7 & 8 versions of the extension.**
 
 Compilation instructions
 ------------------------
 ## Compilation
-From the root of the `extension/php5` for PHP 5 or `extension/php7` for PHP 7 directory:
+From the root of the `extension/php5` for PHP 5 or `extension/php7_8` for PHP 7 & 8 directory:
 
 ```bash
 $ phpize
