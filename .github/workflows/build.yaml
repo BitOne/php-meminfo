@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-versions: [5.6, 7.0, 7.1, 7.2, 7.3, 7.4, 8.0]
+        php-versions: ['7.0', '7.1', '7.2', '7.3', '7.4', '8.0']
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -20,21 +20,28 @@ jobs:
 
       - name: Build the extension
         run: |
-          cd extension/php*$(echo ${{ matrix.php-versions }} | cut -b 1)*/
+          cd extension/
           phpize
           ./configure
           make
 
-      - name: Test the extension
+      - name: Test the extension (PHP 7)
+        if: matrix.php-versions != '8.0'
         run: |
-          cd extension/php*$(echo ${{ matrix.php-versions }} | cut -b 1)*/
+          cd extension/
           REPORT_EXIT_STATUS=1 NO_INTERACTION=1 TEST_PHP_EXECUTABLE=$(which php) $(which php) run-tests.php -d extension=$PWD/modules/meminfo.so
+
+      - name: Test the extension (PHP 8)
+        if: matrix.php-versions == '8.0'
+        run: |
+          cd extension/
+          REPORT_EXIT_STATUS=1 NO_INTERACTION=1 make test
 
       - uses: actions/upload-artifact@v2
         if: failure()
         with:
           name: ext-tests-output
-          path: 'extension/**/tests/*.out'
+          path: 'extension/tests/*.out'
 
       - name: Test the analyzers
         run: |
