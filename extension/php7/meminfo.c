@@ -81,7 +81,6 @@ void meminfo_browse_exec_frames(php_stream *stream,  HashTable *visited_items, i
 {
     zend_execute_data *exec_frame, *prev_frame;
     zend_array *p_symbol_table;
-    zend_array *rebuilt_symbol_table;
 
     exec_frame = EG(current_execute_data);
 
@@ -94,10 +93,9 @@ void meminfo_browse_exec_frames(php_stream *stream,  HashTable *visited_items, i
 
         // copy variables from ex->func->op_array.vars into the symbol table for the last called *user* function
         // therefore it does necessary returns the symbol table of the current frame 
-        rebuilt_symbol_table = zend_rebuild_symbol_table();
+        p_symbol_table = zend_rebuild_symbol_table();
 
-        p_symbol_table = exec_frame->symbol_table;
-        if (p_symbol_table == NULL || p_symbol_table != rebuilt_symbol_table) {
+        if (p_symbol_table == NULL) {
             exec_frame = exec_frame->prev_execute_data;
             continue;
         }
