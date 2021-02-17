@@ -86,6 +86,9 @@ void meminfo_browse_exec_frames(php_stream *stream,  HashTable *visited_items, i
 
     char frame_label[500];
 
+    // Skipping the frame of the meminfo_dump() function call
+    exec_frame = exec_frame->prev_execute_data;
+
     while (exec_frame) {
         // Switch the active frame to the current browsed one and rebuild the symbol table
         // to get it right
@@ -95,19 +98,17 @@ void meminfo_browse_exec_frames(php_stream *stream,  HashTable *visited_items, i
         // therefore it does necessary returns the symbol table of the current frame 
         p_symbol_table = zend_rebuild_symbol_table();
 
-        if (p_symbol_table == NULL) {
-            exec_frame = exec_frame->prev_execute_data;
-            continue;
+        if (p_symbol_table != NULL) {
+
+            if (exec_frame->prev_execute_data) {
+                meminfo_build_frame_label(frame_label, sizeof(frame_label), exec_frame);
+            } else {
+                snprintf(frame_label, sizeof(frame_label), "<GLOBAL>");
+            }
+
+            meminfo_browse_zvals_from_symbol_table(stream, frame_label, p_symbol_table, visited_items, first_element);
+
         }
-
-        if (exec_frame->prev_execute_data) {
-            meminfo_build_frame_label(frame_label, sizeof(frame_label), exec_frame);
-        } else {
-            snprintf(frame_label, sizeof(frame_label), "<GLOBAL>");
-        }
-
-        meminfo_browse_zvals_from_symbol_table(stream, frame_label, p_symbol_table, visited_items, first_element);
-
         exec_frame = exec_frame->prev_execute_data;
     }
 }
