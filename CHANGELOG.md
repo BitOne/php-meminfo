@@ -1,3 +1,11 @@
+# 1.1.1 PHP Meminfo v1.1.1 (2021-02-17)
+Fixes segfault on symbol table not properly rebuilt.
+
+# 1.1 PHP Meminfo v1.1 (2021-02-15)
+This version drops support for PHP 5.5 and adds official supports for PHP 7.4.
+
+Thanks a lot to @tony2001, @WyriHaximus, @vudaltsov and @ahocquard for their contibutions on making PHP Meminfo compatible with PHP .7.4!
+
 # 1.0.4 Ygramul (2018-08-13)
  - [GITHUB-75](https://github.com/BitOne/php-meminfo/issues/75) Now goes through static members of classes as well the usual frame execution browsing.
 
