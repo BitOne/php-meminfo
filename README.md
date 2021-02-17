@@ -271,7 +271,7 @@ You may run them with the `run-tests.php` generated after the `make test`
 command, by providing the `php` executable:
 
 ```bash
-$ TEST_PHP_EXECUTABLE=/usr/bin/php php run-tests.php
+$ TEST_PHP_EXECUTABLE=$(which php) $(which php) run-tests.php -d extension=$PWD/modules/meminfo.so
 
 ```
 In this case your tests will run with your local PHP configuration,
