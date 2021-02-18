@@ -83,6 +83,8 @@ class QueryCommand extends Command
         }
 
         $table->render();
+
+        return 0;
     }
 
     /**

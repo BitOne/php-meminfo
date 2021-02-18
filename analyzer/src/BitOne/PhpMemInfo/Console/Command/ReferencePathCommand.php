@@ -67,6 +67,8 @@ class ReferencePathCommand extends Command
                 $this->renderSimplePath($output, $path);
             }
         }
+
+        return 0;
     }
 
     /**
