@@ -276,6 +276,9 @@ $ TEST_PHP_EXECUTABLE=$(which php) $(which php) run-tests.php -d extension=$PWD/
 In this case your tests will run with your local PHP configuration,
 including the loading of the JSON extension.
 
+Please note this is not required when working with PHP 8 as the JSON functions are now
+usually complied in PHP directly.
+
 Credits
 -------
 Thanks to Derick Rethans for his inspirational work on the essential XDebug. See http://www.xdebug.org/
