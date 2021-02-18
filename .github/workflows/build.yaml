@@ -13,10 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install requirements
-        run: |
-          sudo add-apt-repository ppa:ondrej/php
-          sudo apt-get install php${{ matrix.php-versions }}-cli php${{ matrix.php-versions }}-dev
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          coverage: none
 
       - name: Build the extension
         run: |
@@ -29,7 +30,6 @@ jobs:
         if: matrix.php-versions != '8.0'
         run: |
           cd extension/
-          sudo apt-get install php${{ matrix.php-versions }}-json
           REPORT_EXIT_STATUS=1 NO_INTERACTION=1 TEST_PHP_EXECUTABLE=$(which php) $(which php) run-tests.php -d extension=$PWD/modules/meminfo.so
 
       - name: Test the extension (PHP 8)
