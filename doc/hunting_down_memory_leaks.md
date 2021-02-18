@@ -83,7 +83,7 @@ Perhaps some array accumulates logs or caches something. This command helps you 
 But be careful this command does not summarize multi-dimensional arrays.
 For resolve ID filed see the next paragraph - "Finding references to the leaked object".
 
-## 4. Finding a sample of a leaked object
+## 4. Finding an instance of a leaked object
 So now, we know of what class are the object leaking. It can be multiple classes in the case of
 objects composed with multiple other objects.
 
@@ -216,8 +216,11 @@ all the information needed to debug the code.
 
 It's your turn to play ;)
 
-Video presentation (in French)
-------------------------------
+Video presentation in English
+-----------------------------
+https://www.youtube.com/watch?v=NjIlKlFImlo
+
+A French version:
 https://www.youtube.com/watch?v=wZjnj1PAJ78
 
 
