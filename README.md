@@ -6,21 +6,20 @@ Its main goal is to help you understand memory leaks: by looking at data present
 
 One of the main sources of inspiration for this tool is the Java jmap tool with the -histo option (see `man jmap`).
 
-![Travis CI Results](https://travis-ci.org/BitOne/php-meminfo.svg?branch=master)
+![Build](https://github.com/BitOne/php-meminfo/workflows/Build%20the%20extension%20and%20test%20the%20analyzers/badge.svg)
 
 Compatibility
 -------------
-PHP 5.6, 7.0, 7.1, 7.2, 7.3 and 7.4.
+PHP 7.x, 8.0.
 
-May compile and work with PHP 5.3 and 5.4 but hasn't been tested with these versions.
-
-**Please note that the PHP 5 version is now obsoleted and new features will only
-happen in the PHP 7 version of the extension.**
+For older versions of PHP, you can use the following releases:
+ - 5.6: PHP Meminfo v1.1
+ - 5.5: PHP Meminfo v1.0.5 (may work with PHP 5.3 and PHP 5.4 but not tested)
 
 Compilation instructions
 ------------------------
 ## Compilation
-From the root of the `extension/php5` for PHP 5 or `extension/php7` for PHP 7 directory:
+From the root of the `extension` directory:
 
 ```bash
 $ phpize
