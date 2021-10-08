@@ -7,6 +7,7 @@ use BitOne\PhpMemInfo\Console\Command\ReferencePathCommand;
 use BitOne\PhpMemInfo\Console\Command\SummaryCommand;
 use BitOne\PhpMemInfo\Console\Command\TopChildrenCommand;
 use BitOne\PhpMemInfo\Console\Command\TopSizeCommand;
+use BitOne\PhpMemInfo\Console\Command\StdClassShapesCommand;
 use Symfony\Component\Console\Application as BaseApplication;
 
 /**
@@ -24,5 +25,6 @@ class Application extends BaseApplication
         $this->add(new ReferencePathCommand());
         $this->add(new SummaryCommand());
         $this->add(new TopChildrenCommand());
+        $this->add(new StdClassShapesCommand());
     }
 }
