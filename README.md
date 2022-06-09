@@ -28,6 +28,15 @@ $ make
 $ make install
 ```
 
+### On Windows
+Extract contents of one of the above mentioned directories to `[php-src]/../pecl/php-meminfo`
+
+```bash
+$ buildconf
+$ configure --enable-meminfo
+$ nmake
+```
+
 ## Enabling the extension
 Add the following line to your `php.ini`:
 
