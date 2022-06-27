@@ -78,6 +78,7 @@ PHP_FUNCTION(meminfo_dump)
     php_stream_printf(stream, "  \"items\": {\n");
     meminfo_browse_exec_frames(stream, &visited_items, &first_element);
     meminfo_browse_class_static_members(stream, &visited_items, &first_element);
+    meminfo_browse_function_static_variables(stream, "<GLOBAL_FUNCTION>", CG(function_table), &visited_items, &first_element);
 
     php_stream_printf(stream, "\n    }\n");
     php_stream_printf(stream, "}\n}\n");
@@ -134,7 +135,6 @@ void meminfo_browse_class_static_members(php_stream *stream,  HashTable *visited
     zend_class_entry *class_entry;
     zend_property_info * prop_info;
 
-    char frame_label[500];
     char symbol_name[500];
     const char *prop_name, *class_name;
     zend_string * zstr_symbol_name;
@@ -156,7 +156,6 @@ void meminfo_browse_class_static_members(php_stream *stream,  HashTable *visited
             while ((prop_info = zend_hash_get_current_data_ptr_ex(properties_info, &prop_pos)) != NULL) {
 
                 if (prop_info->flags & ZEND_ACC_STATIC) {
-                    snprintf(frame_label, sizeof(frame_label), "<CLASS_STATIC_MEMBER>");
 #if PHP_VERSION_ID >= 70400
                     prop = CE_STATIC_MEMBERS(class_entry) + prop_info->offset;
 #else
@@ -166,14 +165,14 @@ void meminfo_browse_class_static_members(php_stream *stream,  HashTable *visited
                     zend_unmangle_property_name(prop_info->name, &class_name, &prop_name);
 
                     if (class_name) {
-                        snprintf(symbol_name, sizeof(frame_label), "%s::%s",  class_name, prop_name);
+                        snprintf(symbol_name, sizeof(symbol_name), "%s::%s",  class_name, prop_name);
                     } else {
-                        snprintf(symbol_name, sizeof(frame_label), "%s::%s",  ZSTR_VAL(class_entry->name), ZSTR_VAL(prop_info->name));
+                        snprintf(symbol_name, sizeof(symbol_name), "%s::%s",  ZSTR_VAL(class_entry->name), ZSTR_VAL(prop_info->name));
                     }
 
                     zstr_symbol_name = zend_string_init(symbol_name, strlen(symbol_name), 0);
 
-                    meminfo_zval_dump(stream, frame_label, zstr_symbol_name, prop, visited_items, first_element);
+                    meminfo_zval_dump(stream, "<CLASS_STATIC_MEMBER>", zstr_symbol_name, prop, visited_items, first_element);
 
                     zend_string_release(zstr_symbol_name);
                 }
@@ -181,9 +180,53 @@ void meminfo_browse_class_static_members(php_stream *stream,  HashTable *visited
                 zend_hash_move_forward_ex(properties_info, &prop_pos);
             }
         }
+        
+        // Static local variables can be hiding in class member functions. Find them here
+        meminfo_browse_function_static_variables(
+            stream,
+            ZSTR_VAL(class_entry->name),
+            &class_entry->function_table,
+            visited_items,
+            first_element
+        );
 
         zend_hash_move_forward_ex(CG(class_table), &ce_pos);
     }
+}
+
+/**
+ * Go through static variables of functions
+ */
+void meminfo_browse_function_static_variables(php_stream *stream, char* class_name, HashTable *function_table, HashTable *visited_items, int *first_element)
+{
+    char frame_label[500];
+    char symbol_name[500];
+    zend_string * zstr_symbol_name;
+    zend_function * func;
+    zval * zfunc;
+    zend_string * zstaticvarkey;
+    zval * zstaticvar;
+
+    ZEND_HASH_FOREACH_VAL(function_table, zfunc) {
+        func = Z_FUNC_P(zfunc);
+        if (func->type == ZEND_USER_FUNCTION && func->op_array.static_variables != NULL) {
+            ZEND_HASH_FOREACH_STR_KEY_VAL(func->op_array.static_variables, zstaticvarkey, zstaticvar) {
+                
+                snprintf(frame_label, sizeof(frame_label), "<STATIC_VARIABLE(%s::%s)>",
+                    class_name,
+                    ZSTR_VAL(func->op_array.function_name)
+                );
+                snprintf(symbol_name, sizeof(symbol_name), "$%s", ZSTR_VAL(zstaticvarkey));
+            
+                zstr_symbol_name = zend_string_init(symbol_name, strlen(symbol_name), 0);
+
+                meminfo_zval_dump(stream, frame_label, zstr_symbol_name, zstaticvar, visited_items, first_element);
+
+                zend_string_release(zstr_symbol_name);
+                
+            } ZEND_HASH_FOREACH_END();
+        }
+    } ZEND_HASH_FOREACH_END();
 }
 
 void meminfo_browse_zvals_from_symbol_table(php_stream *stream, char* frame_label, HashTable *p_symbol_table, HashTable * visited_items, int *first_element)

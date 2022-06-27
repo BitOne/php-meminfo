@@ -17,6 +17,7 @@ zend_ulong   meminfo_get_element_size(zval* z);
 // Functions to browse memory parts to record item
 void meminfo_browse_exec_frames(php_stream *stream,  HashTable *visited_items, int *first_element);
 void meminfo_browse_class_static_members(php_stream *stream,  HashTable *visited_items, int *first_element);
+void meminfo_browse_function_static_variables(php_stream *stream, char* class_name, HashTable *function_table, HashTable *visited_items, int *first_element);
 
 void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * symbol_name, zval * zv, HashTable *visited_items, int *first_element);
 void meminfo_hash_dump(php_stream *stream, HashTable *ht, zend_bool is_object, HashTable *visited_items, int *first_element);
