@@ -2,8 +2,8 @@
 #include "config.h"
 #endif
 
-#include "php.h"
 #include "php_meminfo.h"
+#include "php_ini.h"
 
 #include "ext/standard/info.h"
 #include "ext/standard/php_string.h"
@@ -36,15 +36,80 @@ zend_module_entry meminfo_module_entry = {
     STANDARD_MODULE_HEADER,
     "meminfo",
     meminfo_functions,
+    PHP_MINIT(meminfo),
+    PHP_MSHUTDOWN(meminfo),
     NULL,
     NULL,
-    NULL,
-    NULL,
-    NULL,
+    PHP_MINFO(meminfo),
     MEMINFO_VERSION,
-    STANDARD_MODULE_PROPERTIES
+    PHP_MODULE_GLOBALS(meminfo),
+    PHP_GINIT(meminfo),
+    NULL,
+    NULL,
+    STANDARD_MODULE_PROPERTIES_EX
 };
 
+PHP_GINIT_FUNCTION(meminfo)
+{
+    meminfo_globals->dump_on_limit = 0;
+}
+
+PHP_MINFO_FUNCTION(meminfo)
+{
+    DISPLAY_INI_ENTRIES();
+}
+
+#if   PHP_VERSION_ID < 70200 /* PHP 7.1 */
+static void meminfo_zend_error_cb(int type, const char* error_filename, const uint error_lineno, const char* format, va_list args)
+#elif PHP_VERSION_ID < 80000 /* PHP 7.2 - 7.4 */
+static void meminfo_zend_error_cb(int type, const char* error_filename, const uint32_t error_lineno, const char* format, va_list args)
+#elif PHP_VERSION_ID < 80100 /* PHP 8.0 */
+static void meminfo_zend_error_cb(int type, const char* error_filename, const uint32_t error_lineno, zend_string* message)
+#else                        /* PHP 8.1 */
+static void meminfo_zend_error_cb(int type, zend_string* error_filename, const uint32_t error_lineno, zend_string* message)
+#endif
+{
+#if PHP_VERSION_ID < 80000
+    const char* msg = format;
+#else
+    const char* msg = ZSTR_VAL(message);
+#endif
+
+    if (EXPECTED(!should_autodump(type, msg))) {
+        original_zend_error_cb(MEMINFO_ZEND_ERROR_CB_ARGS_PASSTHRU);
+        return;
+    }
+
+    zend_set_memory_limit((size_t)Z_L(-1) >> (size_t)Z_L(1));
+
+    char outfile[500];
+    sprintf(outfile, "%s/php_heap_%d.json", INI_STR("meminfo.dump_dir"), (int)time(NULL));
+
+    php_stream* stream = php_stream_fopen(outfile, "w", NULL);
+    perform_dump(stream);
+
+    zend_set_memory_limit(PG(memory_limit));
+    original_zend_error_cb(MEMINFO_ZEND_ERROR_CB_ARGS_PASSTHRU);
+}
+
+PHP_MINIT_FUNCTION(meminfo)
+{
+    REGISTER_INI_ENTRIES();
+
+    original_zend_error_cb = zend_error_cb;
+    zend_error_cb = meminfo_zend_error_cb;
+
+    return SUCCESS;
+}
+
+PHP_MSHUTDOWN_FUNCTION(meminfo)
+{
+    UNREGISTER_INI_ENTRIES();
+
+    zend_error_cb = original_zend_error_cb;
+
+    return SUCCESS;
+}
 
 /**
  * Generate a JSON output of the list of items in memory (objects, arrays, string, etc...)
@@ -53,21 +118,24 @@ zend_module_entry meminfo_module_entry = {
 PHP_FUNCTION(meminfo_dump)
 {
     zval *zval_stream;
-
-    int first_element = 1;
-
     php_stream *stream;
-    HashTable visited_items;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zval_stream) == FAILURE) {
         return;
     }
+    php_stream_from_zval(stream, zval_stream);
 
+    perform_dump(stream);
+}
+
+void perform_dump(php_stream* stream)
+{
+    int first_element = 1;
+
+    HashTable visited_items;
     zend_hash_init(&visited_items, 1000, NULL, NULL, 0);
 
-    php_stream_from_zval(stream, zval_stream);
     php_stream_printf(stream, "{\n");
-
     php_stream_printf(stream, "  \"header\" : {\n");
     php_stream_printf(stream, "    \"memory_usage\" : %zd,\n", zend_memory_usage(0));
     php_stream_printf(stream, "    \"memory_usage_real\" : %zd,\n", zend_memory_usage(1));
@@ -550,6 +618,23 @@ zend_string * meminfo_escape_for_json(const char *s)
     zend_string_release(s1);
 
     return s3;
+}
+
+#define MEMORY_LIMIT_ERROR_PREFIX "Allowed memory size of"
+static zend_bool should_autodump(int error_type, const char* message) {
+    if (EXPECTED(error_type != E_ERROR)) {
+        return 0;
+    }
+
+    if (EXPECTED(!MEMINFO_G(dump_on_limit))) {
+        return 0;
+    }
+
+    if (EXPECTED(strncmp(MEMORY_LIMIT_ERROR_PREFIX, message, strlen(MEMORY_LIMIT_ERROR_PREFIX)) != 0)) {
+        return 0;
+    }
+
+    return 1;
 }
 
 #ifdef COMPILE_DL_MEMINFO
