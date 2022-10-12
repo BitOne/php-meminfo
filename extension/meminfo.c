@@ -51,7 +51,7 @@ zend_module_entry meminfo_module_entry = {
 
 PHP_GINIT_FUNCTION(meminfo)
 {
-	meminfo_globals->dump_on_limit = 0;
+    meminfo_globals->dump_on_limit = 0;
 }
 
 PHP_MINFO_FUNCTION(meminfo)
@@ -70,15 +70,15 @@ static void meminfo_zend_error_cb(int type, zend_string* error_filename, const u
 #endif
 {
 #if PHP_VERSION_ID < 80000
-	const char* msg = format;
+    const char* msg = format;
 #else
-	const char* msg = ZSTR_VAL(message);
+    const char* msg = ZSTR_VAL(message);
 #endif
 
-	if (EXPECTED(!should_autodump(type, msg))) {
-		original_zend_error_cb(MEMINFO_ZEND_ERROR_CB_ARGS_PASSTHRU);
-		return;
-	}
+    if (EXPECTED(!should_autodump(type, msg))) {
+        original_zend_error_cb(MEMINFO_ZEND_ERROR_CB_ARGS_PASSTHRU);
+        return;
+    }
 
     zend_set_memory_limit((size_t)Z_L(-1) >> (size_t)Z_L(1));
 
@@ -622,19 +622,19 @@ zend_string * meminfo_escape_for_json(const char *s)
 
 #define MEMORY_LIMIT_ERROR_PREFIX "Allowed memory size of"
 static zend_bool should_autodump(int error_type, const char* message) {
-	if (EXPECTED(error_type != E_ERROR)) {
-		return 0;
-	}
+    if (EXPECTED(error_type != E_ERROR)) {
+        return 0;
+    }
 
-	if (EXPECTED(!MEMINFO_G(dump_on_limit))) {
-		return 0;
-	}
+    if (EXPECTED(!MEMINFO_G(dump_on_limit))) {
+        return 0;
+    }
 
-	if (EXPECTED(strncmp(MEMORY_LIMIT_ERROR_PREFIX, message, strlen(MEMORY_LIMIT_ERROR_PREFIX)) != 0)) {
-		return 0;
-	}
+    if (EXPECTED(strncmp(MEMORY_LIMIT_ERROR_PREFIX, message, strlen(MEMORY_LIMIT_ERROR_PREFIX)) != 0)) {
+        return 0;
+    }
 
-	return 1;
+    return 1;
 }
 
 #ifdef COMPILE_DL_MEMINFO
