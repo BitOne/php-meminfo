@@ -331,9 +331,13 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
         *first_element = 0;
     }
 
+    zend_string *zv_type = meminfo_escape_for_json(Z_ISUNDEF_P(zv) ? "null" : zend_get_type_by_const(Z_TYPE_P(zv)));
+
     php_stream_printf(stream, "    \"%s\" : {\n", zval_identifier);
-    php_stream_printf(stream, "        \"type\" : \"%s\",\n", zend_get_type_by_const(Z_TYPE_P(zv)));
+    php_stream_printf(stream, "        \"type\" : \"%s\",\n", ZSTR_VAL(zv_type));
     php_stream_printf(stream, "        \"size\" : \"%ld\",\n", meminfo_get_element_size(zv));
+
+    zend_string_release(zv_type);
 
     if (frame_label) {
         zend_string * escaped_frame_label;
