@@ -27,9 +27,11 @@ class SummaryCreator
      * Create a summary from the existing items,
      * aggregated by type/class and sorted by count.
      *
+     * @param array $sorters
+     *
      * @return array
      */
-    public function createSummary()
+    public function createSummary($sorters)
     {
         $summary = [];
 
@@ -45,19 +47,25 @@ class SummaryCreator
             $summary[$type]['self_size']+= $item['size'];
         }
 
-        uasort($summary, function ($a, $b) {
-                $aCount = $a['count'];
-                $bCount = $b['count'];
+        uasort($summary, function ($a, $b) use ($sorters) {
+            $aCount = $a[$sorters['column']];
+            $bCount = $b[$sorters['column']];
 
-                if ($a === $b) {
-                    return 0;
-                }
-                if ($a['count'] > $b['count']) {
-                    return -1;
-                } else {
-                    return 1;
-                }
+            if ($a === $b) {
+                return 0;
             }
+
+            $comp = $a[$sorters['column']] > $b[$sorters['column']];
+            if ($sorters['order'] === 'asc') {
+                $comp = $a[$sorters['column']] < $b[$sorters['column']];
+            }
+
+            if ($comp) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
         );
 
         return $summary;
