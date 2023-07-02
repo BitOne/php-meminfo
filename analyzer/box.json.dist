@@ -1,0 +1,14 @@
+{
+  "chmod": "0755",
+  "main": "bin/analyzer",
+  "output": ".build/meminfo.phar",
+  "directories": ["."],
+  "finder": [
+    {
+      "name": "*.php",
+      "exclude": ["test", "tests"],
+      "in": "vendor"
+    }
+  ],
+  "stub": true
+}
