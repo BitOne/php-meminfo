@@ -9,8 +9,11 @@
 #include "ext/standard/php_string.h"
 
 #include "zend_extensions.h"
-#include "zend_exceptions.h"
 #include "Zend/zend_compile.h"
+
+#if PHP_VERSION_ID >= 80100
+#include "zend_fibers.h"
+#endif
 
 #include "zend.h"
 #include "SAPI.h"
@@ -31,6 +34,8 @@ const zend_function_entry meminfo_functions[] = {
     PHP_FE_END
 };
 #endif
+
+static void meminfo_visit_exec_frame(php_stream *stream, HashTable *visited_items, zend_execute_data *current_execute_data, int *first_element);
 
 zend_module_entry meminfo_module_entry = {
     STANDARD_MODULE_HEADER,
@@ -88,29 +93,41 @@ PHP_FUNCTION(meminfo_dump)
 /**
  * Go through all exec frames to gather declared variables and follow them to record items in memory
  */
-void meminfo_browse_exec_frames(php_stream *stream,  HashTable *visited_items, int *first_element)
-{
-    zend_execute_data *exec_frame, *prev_frame;
-    zend_array *p_symbol_table;
+void meminfo_browse_exec_frames(php_stream *stream, HashTable *visited_items, int *first_element) {
+    zend_execute_data *exec_frame;
 
     exec_frame = EG(current_execute_data);
 
-    char frame_label[500];
+    // exec_frame->prev_execute_data Skipping the frame of the meminfo_dump() function call
+    meminfo_visit_exec_frame(stream, visited_items, exec_frame->prev_execute_data, first_element);
 
-    // Skipping the frame of the meminfo_dump() function call
-    exec_frame = exec_frame->prev_execute_data;
+    EG(current_execute_data) = exec_frame;
+}
+
+static void meminfo_visit_exec_frame(php_stream *stream, HashTable *visited_items, zend_execute_data *current_execute_data, int *first_element)
+{
+    zend_execute_data *exec_frame;
+    zend_array *p_symbol_table;
+
+    char frame_label[500];
+    char ptr_identifier[17];
+    exec_frame = current_execute_data;
 
     while (exec_frame) {
+        sprintf(ptr_identifier, "%p", exec_frame);
+        if (meminfo_visit_item(ptr_identifier, visited_items)) {
+            goto handle_next;
+        }
+
         // Switch the active frame to the current browsed one and rebuild the symbol table
         // to get it right
         EG(current_execute_data) = exec_frame;
 
         // copy variables from ex->func->op_array.vars into the symbol table for the last called *user* function
-        // therefore it does necessary returns the symbol table of the current frame 
+        // therefore it does necessary returns the symbol table of the current frame
         p_symbol_table = zend_rebuild_symbol_table();
 
         if (p_symbol_table != NULL) {
-
             if (exec_frame->prev_execute_data) {
                 meminfo_build_frame_label(frame_label, sizeof(frame_label), exec_frame);
             } else {
@@ -118,8 +135,9 @@ void meminfo_browse_exec_frames(php_stream *stream,  HashTable *visited_items, i
             }
 
             meminfo_browse_zvals_from_symbol_table(stream, frame_label, p_symbol_table, visited_items, first_element);
-
         }
+
+handle_next:
         exec_frame = exec_frame->prev_execute_data;
     }
 }
@@ -360,11 +378,13 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
 
     if (Z_TYPE_P(zv) == IS_OBJECT) {
         HashTable *properties;
-        zend_string * escaped_class_name;
+        zend_string *escaped_class_name;
+        zend_string *class_name;
 
         properties = NULL;
+        class_name = Z_OBJCE_P(zv)->name;
 
-        escaped_class_name = meminfo_escape_for_json(ZSTR_VAL(Z_OBJCE_P(zv)->name));
+        escaped_class_name = meminfo_escape_for_json(ZSTR_VAL(class_name));
 
         php_stream_printf(stream, ",\n");
         php_stream_printf(stream, "        \"class\" : \"%s\",\n", ZSTR_VAL(escaped_class_name));
@@ -392,6 +412,16 @@ void meminfo_zval_dump(php_stream * stream, char * frame_label, zend_string * sy
             }
 #endif
         }
+
+#if PHP_VERSION_ID >= 80100
+        if (strcmp(ZSTR_VAL(class_name), "Fiber") == 0) {
+            zend_object *object = Z_OBJ_P(zv);
+            zend_fiber *fiber = (zend_fiber *) object;
+            if (fiber->execute_data) {
+                meminfo_visit_exec_frame(stream, visited_items, fiber->execute_data, first_element);
+            }
+        }
+#endif
     } else if (Z_TYPE_P(zv) == IS_ARRAY) {
         php_stream_printf(stream, ",\n");
         meminfo_hash_dump(stream, Z_ARRVAL_P(zv), 0, visited_items, first_element);
